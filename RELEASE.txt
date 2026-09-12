@@ -18,5 +18,7 @@ Expected next sprint:
   * Drawing
 
 GitHub Repository:
+https://github.com/spoon599/PaintApp
 
 GitHub Release:
+https://github.com/spoon599/PaintApp/releases/tag/v0.1.0
