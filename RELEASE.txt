@@ -1,0 +1,22 @@
+Nolan's Pain(t) Version 0.1.0 -  09/12/2026
+
+New features:
+
+  * Menu Bar
+  * Display PNG and JPG
+  * Image saving
+  * Save As
+  * Exit Option
+  * File Selection
+
+Known issues:
+
+  * Save As can only do PNG
+
+Expected next sprint:
+
+  * Drawing
+
+GitHub Repository:
+
+GitHub Release:
