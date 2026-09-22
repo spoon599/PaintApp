@@ -7,8 +7,9 @@ import com.example.paintapp.ui.MenuBarFactory;
 import javafx.application.Application;
 import javafx.application.Platform;
 
-import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 
@@ -17,13 +18,14 @@ public class Main extends Application {
     @Override 
     public void start(Stage stage) {
 
+        // main controllers and services
         BorderPane root = new BorderPane();
         ImageController imageController = new ImageController();
         FileService fileService = new FileService();
         MenuBarFactory menu = new MenuBarFactory();
 
-        root.setTop(menu.getMenuBar());
-        root.setCenter(imageController.getImageView());
+        root.setTop(menu.getMenuBar()); // set the top of the border pane to the menu bar
+        root.setCenter(imageController.getStackPane()); // set the center of the border pane to the stack pane containing the image and canvas
         
         // Open
         menu.getOpenItem().setOnAction(event -> {
@@ -56,9 +58,9 @@ public class Main extends Application {
                 e.printStackTrace();
             }
         });
-
+        
+        // create the scene and set it on the stage
         Scene scene = new Scene(root, 900, 600);
-
         stage.setTitle("Nolan's Pain(t)");
         stage.setScene(scene);
         stage.show();
