@@ -44,7 +44,7 @@ public class Main extends Application {
         // Save
         menu.getSaveItem().setOnAction(event -> {
             try {
-                fileService.saveImage(imageController.getImage());
+                fileService.saveImage(imageController.getModifiedImage());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -60,7 +60,7 @@ public class Main extends Application {
         });
         
         // create the scene and set it on the stage
-        Scene scene = new Scene(root, 900, 600);
+        Scene scene = new Scene(root, 900, 600); // parent to root and set dimensions to 900x600
         stage.setTitle("Nolan's Pain(t)");
         stage.setScene(scene);
         stage.show();

@@ -2,6 +2,7 @@ package com.example.paintapp.controllers;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -60,11 +61,13 @@ public class ImageController {
      * @param image The image to display
      */
     public void setImage(Image image) {
-        imageView.setImage(image);
+        imageView.setImage(image); // apply image (aspect ratio preserved by default)
 
         // adjust canvas size to match the new image dimensions
         canvas.setWidth(image.getWidth());
         canvas.setHeight(image.getHeight());
+
+        cleanCanvas(); // clear the canvas when a new image is set
     }
 
     /**
@@ -89,6 +92,29 @@ public class ImageController {
             lastX = currentX;
             lastY = currentY;
         });
+    }
+
+    /**
+     * Removes all drawings from the current canvas.
+     */
+    private void cleanCanvas() {
+        GraphicsContext graphics = canvas.getGraphicsContext2D();
+        graphics.clearRect(
+            0, 
+            0, 
+            canvas.getWidth(), 
+            canvas.getHeight()
+        );
+        graphics.restore();
+    }
+
+    public Image getModifiedImage() {
+        WritableImage writableImage = new WritableImage(
+            (int) canvas.getWidth(), 
+            (int) canvas.getHeight()
+        );
+        stackPane.snapshot(null, writableImage);
+        return writableImage;
     }
     
 }
