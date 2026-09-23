@@ -57,6 +57,9 @@ public class ImageController {
     public CustomScrollPane getScrollPane() {
         return scrollPane;
     }
+    public DrawingCanvas getDrawingCanvas() {
+        return drawingCanvas;
+    }
     
     /**
      * Sets the image displayed in the controller's ImageView.

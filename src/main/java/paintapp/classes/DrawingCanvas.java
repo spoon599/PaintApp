@@ -45,7 +45,10 @@ public class DrawingCanvas extends CustomCanvas {
             this.getWidth(), 
             this.getHeight()
         );
-        graphics.restore();
+    }
+
+    public void setLineWidth(double width) {
+        this.getGraphicsContext2D().setLineWidth(width);
     }
     
 }

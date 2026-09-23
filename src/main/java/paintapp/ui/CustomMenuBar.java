@@ -4,7 +4,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 
-public class MenuBarFactory {
+public class CustomMenuBar {
 
     private final MenuBar menuBar;
 
@@ -13,7 +13,7 @@ public class MenuBarFactory {
     private final MenuItem saveAsItem;
     private final MenuItem exitItem;
 
-    public MenuBarFactory() {
+    public CustomMenuBar() {
         Menu fileMenu = new Menu("File");
 
         openItem = new MenuItem("Open");
@@ -35,19 +35,15 @@ public class MenuBarFactory {
     public MenuBar getMenuBar() {
         return menuBar;
     }
-
     public MenuItem getOpenItem() {
         return openItem;
     }
-
     public MenuItem getSaveItem() {
         return saveItem;
     }
-
     public MenuItem getSaveAsItem() {
         return saveAsItem;
     }
-
     public MenuItem getExitItem() {
         return exitItem;
     }

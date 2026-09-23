@@ -2,7 +2,8 @@ package paintapp;
 
 import paintapp.controllers.ImageController;
 import paintapp.services.FileService;
-import paintapp.ui.MenuBarFactory;
+import paintapp.ui.CustomMenuBar;
+import paintapp.ui.CustomToolBar;
 import paintapp.utils.ExceptionHandler;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -12,6 +13,7 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 
 public class Main extends Application {
 
@@ -22,9 +24,22 @@ public class Main extends Application {
         BorderPane root = new BorderPane();
         ImageController imageController = new ImageController();
         FileService fileService = new FileService();
-        MenuBarFactory menu = new MenuBarFactory();
+        CustomMenuBar menu = new CustomMenuBar();
+        CustomToolBar toolbar = new CustomToolBar();
 
-        root.setTop(menu.getMenuBar()); // set the top of the border pane to the menu bar
+        VBox container = new VBox(
+            menu.getMenuBar(),
+            toolbar.getToolBar()
+        );
+
+        // line width event
+        toolbar.getLineWidthSlider().valueProperty().addListener(
+            (observable, oldVal, newVal) -> {
+                imageController.getDrawingCanvas().setLineWidth(newVal.doubleValue());
+            }
+        );
+
+        root.setTop(container); // set to top container
         root.setCenter(imageController.getScrollPane()); // set to our scroll pane, top of stack
         // current hierarchy goes ScrollPane -> workspace -> stackpane -> imageview + canvas
         
