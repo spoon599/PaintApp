@@ -65,42 +65,7 @@ public class Main extends Application {
 
         // Exit
         menu.getExitItem().setOnAction(event -> {
-            if (imageController.getDrawingCanvas().isModified()) {
-                Alert alert = new Alert(AlertType.CONFIRMATION);
-                alert.setTitle("Unsaved Changes");
-                alert.setHeaderText("You have unsaved changes!");
-                alert.setContentText("Would you like to save before exiting?");
-
-                ButtonType save = new ButtonType("Save");
-                ButtonType dontSave = new ButtonType("Don't Save");
-                ButtonType cancel = new ButtonType("Cancel");
-
-                alert.getButtonTypes().setAll( // set instead of add to replace default confirmation buttons
-                    save,
-                    dontSave,
-                    cancel
-                );
-
-                Optional<ButtonType> result = alert.showAndWait();
-                if (result.isPresent()) {
-                    ButtonType selectedButton = result.get();
-                    
-                    if (selectedButton == save) {
-                        try {
-                            fileService.saveImage(imageController.getModifiedImage());
-                            imageController.getDrawingCanvas().setModified(false);
-                            Platform.exit();
-                        } catch (Exception e) {
-                            ExceptionHandler.printFormattedException(e);
-                        }
-                    } else if (selectedButton == dontSave) {
-                        Platform.exit();
-                    }
-                }
-
-            } else {
-                Platform.exit();
-            }
+            attemptExit(imageController, fileService);
         });
 
         // Save
@@ -150,12 +115,59 @@ public class Main extends Application {
         Scene scene = new Scene(root, 900, 600); // parent to root and set dimensions to 900x600
         stage.setTitle("Nolan's Pain(t)");
         stage.setScene(scene);
+        stage.setOnCloseRequest(event -> {
+            event.consume(); // overrides default window closing
+            attemptExit(imageController, fileService);
+        });
+        
         stage.show();
         
     }
 
     public static void main(String[] args) {
         launch();
+    }
+
+    private void attemptExit(
+        ImageController imageController,
+        FileService fileService
+    ) {
+        if (imageController.getDrawingCanvas().isModified()) {
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Unsaved Changes");
+            alert.setHeaderText("You have unsaved changes!");
+            alert.setContentText("Would you like to save before exiting?");
+
+            ButtonType save = new ButtonType("Save");
+            ButtonType dontSave = new ButtonType("Don't Save");
+            ButtonType cancel = new ButtonType("Cancel");
+
+            alert.getButtonTypes().setAll( // set instead of add to replace default confirmation buttons
+                save,
+                dontSave,
+                cancel
+            );
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent()) {
+                ButtonType selectedButton = result.get();
+
+                if (selectedButton == save) {
+                    try {
+                        fileService.saveImage(imageController.getModifiedImage());
+                        imageController.getDrawingCanvas().setModified(false);
+                       Platform.exit();
+                    } catch (Exception e) {
+                        ExceptionHandler.printFormattedException(e);
+                    }
+                } else if (selectedButton == dontSave) {
+                    Platform.exit();
+                }
+            }
+
+        } else {
+            Platform.exit();
+        }
     }
     
 }
