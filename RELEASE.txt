@@ -5,10 +5,11 @@ New features:
   * Proper image saving
   * More Extension Support
   * Basic Drawing Capabilities
+  * Image scrolling
 
 Known issues:
 
-  * Need to fix displaying images bigger than the actual application window.
+  * 
 
 Expected next sprint:
 
