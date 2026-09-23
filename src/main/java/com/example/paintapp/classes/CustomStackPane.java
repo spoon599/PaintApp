@@ -7,8 +7,8 @@ import javafx.scene.image.Image;
 public class CustomStackPane extends StackPane {
 
     public CustomStackPane() {}
-    public CustomStackPane(Node... var1) {
-        this.getChildren().addAll(var1);
+    public CustomStackPane(Node... content) {
+       super(content);
     }
 
     /**

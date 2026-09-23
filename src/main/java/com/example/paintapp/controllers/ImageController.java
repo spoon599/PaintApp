@@ -1,6 +1,7 @@
 package com.example.paintapp.controllers;
 
 import com.example.paintapp.classes.CustomCanvas;
+import com.example.paintapp.classes.CustomScrollPane;
 import com.example.paintapp.classes.CustomStackPane;
 
 import javafx.scene.image.Image;
@@ -16,6 +17,7 @@ public class ImageController {
     private final CustomCanvas canvas; // drawing sheet
     private final CustomStackPane stackPane; // snapshot container (image + drawing sheet)
     private final CustomStackPane workspace; // global allignment pane
+    private final CustomScrollPane scrollPane; // scroll movement, top of chain
 
     private double lastX;
     private double lastY;
@@ -38,6 +40,10 @@ public class ImageController {
 
         // used to center the stackPane
         workspace = new CustomStackPane(stackPane); // workspace -> stackPane -> imageView & canvas
+
+        // setup scrolling
+        scrollPane = new CustomScrollPane(workspace);
+        scrollPane.setFitToDimensions(true);
 
         setupDrawing();
     }
@@ -68,6 +74,10 @@ public class ImageController {
      */
     public CustomStackPane getWorkspace() {
         return workspace;
+    }
+
+    public CustomScrollPane getScrollPane() {
+        return scrollPane;
     }
 
     /**

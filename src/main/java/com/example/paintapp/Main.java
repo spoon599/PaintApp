@@ -25,7 +25,8 @@ public class Main extends Application {
         MenuBarFactory menu = new MenuBarFactory();
 
         root.setTop(menu.getMenuBar()); // set the top of the border pane to the menu bar
-        root.setCenter(imageController.getWorkspace()); // set to workspace
+        root.setCenter(imageController.getScrollPane()); // set to our scroll pane, top of stack
+        // current hierarchy goes ScrollPane -> workspace -> stackpane -> imageview + canvas
         
         // Open
         menu.getOpenItem().setOnAction(event -> {
@@ -46,16 +47,7 @@ public class Main extends Application {
             try {
                 fileService.saveImage(imageController.getModifiedImage()); // save the modified image to the current file
             } catch (Exception e) {
-                StackTraceElement trace = e.getStackTrace()[0];
-                System.err.println("""
-                        %s%s Failed: %s
-                        File: %s
-                        Line: %d"""
-                        .formatted(
-                            "\u001B[31m", trace.getMethodName(), e.getMessage(),
-                            trace.getFileName(),
-                            trace.getLineNumber(), "\u001B[0m"
-                        ));
+                printFormattedException(e);
             }
         });
 
@@ -64,16 +56,7 @@ public class Main extends Application {
             try {
                 fileService.saveImageAs(stage, imageController.getModifiedImage()); // save the modified image to a new file chosen by the user
             } catch (Exception e) {
-                StackTraceElement trace = e.getStackTrace()[0];
-                System.err.println("""
-                        %s%s Failed: %s
-                        File: %s
-                        Line: %d%s"""
-                        .formatted(
-                            "\u001B[31m", trace.getMethodName(), e.getMessage(),
-                            trace.getFileName(),
-                            trace.getLineNumber(), "\u001B[0m"
-                        ));
+                printFormattedException(e);
             }
         });
         
@@ -87,6 +70,20 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+
+    private void printFormattedException(Exception e) {
+        StackTraceElement trace = e.getStackTrace()[0];
+        System.err.println("""
+            %s%s Failed: %s
+            File: %s
+            Line: %d%s"""
+            .formatted(
+                "\u001B[31m", trace.getMethodName(), e.getMessage(),
+                trace.getFileName(),
+                trace.getLineNumber(), "\u001B[0m"
+            )
+        );
     }
     
 }
