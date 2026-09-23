@@ -5,6 +5,9 @@ import paintapp.services.FileService;
 import paintapp.ui.CustomMenuBar;
 import paintapp.ui.CustomToolBar;
 import paintapp.utils.ExceptionHandler;
+
+import java.util.Optional;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 
@@ -12,6 +15,8 @@ import javafx.stage.Stage;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -59,14 +64,50 @@ public class Main extends Application {
         });
 
         // Exit
-        menu.getExitItem().setOnAction(event -> 
-            Platform.exit()
-        );
+        menu.getExitItem().setOnAction(event -> {
+            if (imageController.getDrawingCanvas().isModified()) {
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                alert.setTitle("Unsaved Changes");
+                alert.setHeaderText("You have unsaved changes!");
+                alert.setContentText("Would you like to save before exiting?");
+
+                ButtonType save = new ButtonType("Save");
+                ButtonType dontSave = new ButtonType("Don't Save");
+                ButtonType cancel = new ButtonType("Cancel");
+
+                alert.getButtonTypes().setAll( // set instead of add to replace default confirmation buttons
+                    save,
+                    dontSave,
+                    cancel
+                );
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent()) {
+                    ButtonType selectedButton = result.get();
+                    
+                    if (selectedButton == save) {
+                        try {
+                            fileService.saveImage(imageController.getModifiedImage());
+                            imageController.getDrawingCanvas().setModified(false);
+                            Platform.exit();
+                        } catch (Exception e) {
+                            ExceptionHandler.printFormattedException(e);
+                        }
+                    } else if (selectedButton == dontSave) {
+                        Platform.exit();
+                    }
+                }
+
+            } else {
+                Platform.exit();
+            }
+        });
 
         // Save
         menu.getSaveItem().setOnAction(event -> {
             try {
                 fileService.saveImage(imageController.getModifiedImage()); // save the modified image to the current file
+                imageController.getDrawingCanvas().setModified(false);
             } catch (Exception e) {
                 ExceptionHandler.printFormattedException(e);
             }
@@ -76,6 +117,7 @@ public class Main extends Application {
         menu.getSaveAsItem().setOnAction(event -> {
             try {
                 fileService.saveImageAs(stage, imageController.getModifiedImage()); // save the modified image to a new file chosen by the user
+                imageController.getDrawingCanvas().setModified(false); 
             } catch (Exception e) {
                 ExceptionHandler.printFormattedException(e);
             }
@@ -83,7 +125,7 @@ public class Main extends Application {
 
         // Help
         menu.getHelpItem().setOnAction(event -> {
-            Alert about = new Alert(Alert.AlertType.INFORMATION);
+            Alert about = new Alert(AlertType.INFORMATION);
             about.setTitle("Help");
             about.setHeaderText("Nolan's Pain(t)");
             about.setContentText("""
@@ -97,7 +139,7 @@ public class Main extends Application {
 
         // About
         menu.getAboutItem().setOnAction(event -> {
-            Alert about = new Alert(Alert.AlertType.INFORMATION);
+            Alert about = new Alert(AlertType.INFORMATION);
             about.setTitle("About");
             about.setHeaderText("Nolan's Pain(t)");
             about.setContentText("Version 0.2.0");

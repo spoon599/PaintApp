@@ -8,6 +8,8 @@ public class DrawingCanvas extends CustomCanvas {
     private double lastX;
     private double lastY;
 
+    private boolean modified = false;
+
     public DrawingCanvas() {}
 
     /**
@@ -28,6 +30,7 @@ public class DrawingCanvas extends CustomCanvas {
             double currentY = event.getY();
 
             graphics.strokeLine(lastX, lastY, currentX, currentY);
+            modified = true;
 
             lastX = currentX;
             lastY = currentY;
@@ -53,6 +56,14 @@ public class DrawingCanvas extends CustomCanvas {
 
     public void setLineColor(Color color) {
         this.getGraphicsContext2D().setStroke(color);
+    }
+
+    public boolean isModified() {
+        return modified;
+    }
+
+    public void setModified(boolean value) {
+        modified = value;
     }
     
 }
