@@ -23,6 +23,10 @@ import javafx.scene.layout.VBox;
 
 public class Main extends Application {
 
+    private final ButtonType saveButton = new ButtonType("Save");
+    private final ButtonType dontSaveButton = new ButtonType("Don't Save");
+    private final ButtonType cancelButton = new ButtonType("Cancel");
+
     @Override
     public void start(Stage stage) {
 
@@ -56,11 +60,7 @@ public class Main extends Application {
         
         // Open
         menu.getOpenItem().setOnAction(event -> {
-            Image image = fileService.openImage(stage);
-            
-            if (image != null) {
-                imageController.setImage(image);
-            }
+            attemptOpen(stage, imageController, fileService);
         });
 
         // Exit
@@ -133,41 +133,76 @@ public class Main extends Application {
         FileService fileService
     ) {
         if (imageController.getDrawingCanvas().isModified()) {
-            Alert alert = new Alert(AlertType.CONFIRMATION);
-            alert.setTitle("Unsaved Changes");
-            alert.setHeaderText("You have unsaved changes!");
-            alert.setContentText("Would you like to save before exiting?");
-
-            ButtonType save = new ButtonType("Save");
-            ButtonType dontSave = new ButtonType("Don't Save");
-            ButtonType cancel = new ButtonType("Cancel");
-
-            alert.getButtonTypes().setAll( // set instead of add to replace default confirmation buttons
-                save,
-                dontSave,
-                cancel
-            );
-
-            Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent()) {
-                ButtonType selectedButton = result.get();
-
-                if (selectedButton == save) {
-                    try {
-                        fileService.saveImage(imageController.getModifiedImage());
-                        imageController.getDrawingCanvas().setModified(false);
-                       Platform.exit();
-                    } catch (Exception e) {
-                        ExceptionHandler.printFormattedException(e);
-                    }
-                } else if (selectedButton == dontSave) {
-                    Platform.exit();
-                }
+            Optional<ButtonType> result = showUnsavedChangesAlert();
+            if (result.isEmpty()) {
+                return;
             }
 
+            ButtonType selectedButton = result.get();
+            if (selectedButton == saveButton) {
+                try {
+                    fileService.saveImage(imageController.getModifiedImage());
+                    imageController.getDrawingCanvas().setModified(false);
+                    Platform.exit();
+                } catch (Exception e) {
+                    ExceptionHandler.printFormattedException(e);
+                }
+            } else if (selectedButton == dontSaveButton) {
+                Platform.exit();
+            }
         } else {
             Platform.exit();
         }
+    }
+
+    private void attemptOpen(
+        Stage stage,
+        ImageController imageController,
+        FileService fileService
+    ) {
+        if (imageController.getDrawingCanvas().isModified()) {
+            Optional<ButtonType> result = showUnsavedChangesAlert();
+            if (result.isEmpty()) {
+                return;
+            }
+
+            ButtonType selectedButton = result.get();
+            if (selectedButton == saveButton) {
+                try {
+                    fileService.saveImage(
+                        imageController.getModifiedImage()
+                    );
+                    imageController
+                        .getDrawingCanvas()
+                        .setModified(false);
+                } catch (Exception e) {
+                    ExceptionHandler.printFormattedException(e);
+                    return;
+                }
+            } else if (selectedButton == cancelButton) {
+                return;
+            }
+        }
+
+        Image image = fileService.openImage(stage);
+        if (image != null) {
+            imageController.setImage(image);
+        }
+    }
+
+    private Optional<ButtonType> showUnsavedChangesAlert() {
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Unsaved Changes");
+        alert.setHeaderText("You have unsaved changes!");
+        alert.setContentText("Would you like to save your changes");
+
+        alert.getButtonTypes().setAll( // set instead of add to replace default confirmation buttons
+            saveButton,
+            dontSaveButton,
+            cancelButton
+        );
+
+        return alert.showAndWait();
     }
     
 }
