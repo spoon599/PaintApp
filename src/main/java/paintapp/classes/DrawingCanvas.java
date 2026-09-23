@@ -1,6 +1,8 @@
 package paintapp.classes;
 
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
 public class DrawingCanvas extends CustomCanvas {
@@ -50,18 +52,31 @@ public class DrawingCanvas extends CustomCanvas {
         );
     }
 
+    public void resizeDrawing(double width, double height) {
+        WritableImage oldDrawing = new WritableImage(
+            (int) getWidth(),
+            (int) getHeight()
+        );
+
+        SnapshotParameters params = new SnapshotParameters();
+        params.setFill(Color.TRANSPARENT);
+
+        snapshot(params, oldDrawing);
+        setSize(width, height);
+
+        GraphicsContext graphics = getGraphicsContext2D();
+        graphics.drawImage(oldDrawing, 0, 0);
+    }
+
     public void setLineWidth(double width) {
         this.getGraphicsContext2D().setLineWidth(width);
     }
-
     public void setLineColor(Color color) {
         this.getGraphicsContext2D().setStroke(color);
     }
-
     public boolean isModified() {
         return modified;
     }
-
     public void setModified(boolean value) {
         modified = value;
     }

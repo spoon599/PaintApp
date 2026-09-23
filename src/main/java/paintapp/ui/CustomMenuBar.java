@@ -13,6 +13,8 @@ public class CustomMenuBar {
     private final MenuItem saveAsItem;
     private final MenuItem exitItem;
 
+    private final MenuItem resizeItem;
+
     private final MenuItem helpItem;
     private final MenuItem aboutItem;
 
@@ -33,6 +35,11 @@ public class CustomMenuBar {
             exitItem
         );
 
+        // edit
+        Menu editMenu = new Menu("Edit");
+        resizeItem = new MenuItem("Resize");
+        editMenu.getItems().add(resizeItem);
+
         // help
         Menu helpMenu = new Menu("Help");
 
@@ -48,6 +55,7 @@ public class CustomMenuBar {
         menuBar = new MenuBar();
         menuBar.getMenus().addAll(
             fileMenu,
+            editMenu,
             helpMenu
         );
     }
@@ -72,6 +80,9 @@ public class CustomMenuBar {
     }
     public MenuItem getAboutItem() {
         return aboutItem;
+    }
+    public MenuItem getResizeItem() {
+        return resizeItem;
     }
 
 }

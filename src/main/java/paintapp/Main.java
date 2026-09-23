@@ -17,8 +17,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 public class Main extends Application {
@@ -91,6 +95,51 @@ public class Main extends Application {
                 }
             } catch (Exception e) {
                 ExceptionHandler.printFormattedException(e);
+            }
+        });
+
+        // Resize
+        menu.getResizeItem().setOnAction(event -> {
+            Dialog<ButtonType> resizeDialog = new Dialog<>();
+            resizeDialog.setTitle("Resize Canvas");
+            resizeDialog.setHeaderText("Enter the new canvas size.");
+
+            TextField widthField = new TextField();
+            TextField heightField = new TextField();
+
+            widthField.setPromptText("Width");
+            heightField.setPromptText("Height");
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+
+            grid.add(new Label("Width:"), 0, 0);
+            grid.add(widthField, 1, 0);
+
+            grid.add(new Label("Height:"), 0, 1);
+            grid.add(heightField, 1, 1);
+
+            resizeDialog.getDialogPane().setContent(grid);
+            resizeDialog.getDialogPane().getButtonTypes().addAll(
+                ButtonType.OK,
+                ButtonType.CANCEL
+            );
+
+            Optional<ButtonType> result = resizeDialog.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                try {
+                    double width = Double.parseDouble(widthField.getText());
+                    double height = Double.parseDouble(heightField.getText());
+
+                    if (width > 0 && height > 0) {
+                        imageController.getDrawingCanvas().resizeDrawing(width, height);
+                        imageController.getStackPane().setSize(width, height);
+                        imageController.getDrawingCanvas().setModified(true);
+                    }
+                } catch (Exception e) {
+                    ExceptionHandler.printFormattedException(e);
+                }
             }
         });
 

@@ -1,5 +1,6 @@
 package paintapp.controllers;
 
+import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -24,6 +25,9 @@ public class ImageController {
         imageView.setPreserveRatio(true); // preserve image's aspect ratio when setting a new image
 
         drawingCanvas = new DrawingCanvas();
+
+        CustomStackPane.setAlignment(imageView, Pos.TOP_LEFT);
+        CustomStackPane.setAlignment(drawingCanvas, Pos.TOP_LEFT);
         
         // actual image stack
         stackPane = new CustomStackPane();
