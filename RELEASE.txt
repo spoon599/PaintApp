@@ -4,16 +4,18 @@ New features:
 
   * Proper image saving
   * More Extension Support
-  * Basic Drawing Capabilities
-  * Image scrolling
+  * Image scrolling for images larger than the application window
+  * Smart save
+  * Drawing with stroke size and color picking
+  * Help and About menu
 
 Known issues:
 
-  * 
+  * Resizing can break
 
 Expected next sprint:
 
-  * 
+  * Resizing fixes and additions
 
 GitHub Repository:
 https://github.com/spoon599/PaintApp
