@@ -1,4 +1,4 @@
-package com.example.paintapp.classes;
+package paintapp.classes;
 
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;

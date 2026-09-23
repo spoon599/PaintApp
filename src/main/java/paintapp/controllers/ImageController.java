@@ -1,8 +1,4 @@
-package com.example.paintapp.controllers;
-
-import com.example.paintapp.classes.CustomCanvas;
-import com.example.paintapp.classes.CustomScrollPane;
-import com.example.paintapp.classes.CustomStackPane;
+package paintapp.controllers;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -10,6 +6,9 @@ import javafx.scene.image.WritableImage;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import paintapp.classes.CustomCanvas;
+import paintapp.classes.CustomScrollPane;
+import paintapp.classes.CustomStackPane;
 
 public class ImageController {
 

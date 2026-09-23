@@ -1,14 +1,12 @@
-package com.example.paintapp;
-
-import com.example.paintapp.controllers.ImageController;
-import com.example.paintapp.services.FileService;
-import com.example.paintapp.ui.MenuBarFactory;
+package paintapp;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 
 import javafx.stage.Stage;
-
+import paintapp.controllers.ImageController;
+import paintapp.services.FileService;
+import paintapp.ui.MenuBarFactory;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;

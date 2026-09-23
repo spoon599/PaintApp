@@ -1,4 +1,4 @@
-package com.example.paintapp.services;
+package paintapp.services;
 
 import java.io.File;
 import java.io.IOException;

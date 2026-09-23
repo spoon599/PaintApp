@@ -1,4 +1,4 @@
-package com.example.paintapp.classes;
+package paintapp.classes;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.image.Image;
