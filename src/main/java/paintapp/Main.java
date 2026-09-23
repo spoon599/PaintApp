@@ -11,6 +11,7 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -78,6 +79,29 @@ public class Main extends Application {
             } catch (Exception e) {
                 ExceptionHandler.printFormattedException(e);
             }
+        });
+
+        // Help
+        menu.getHelpItem().setOnAction(event -> {
+            Alert about = new Alert(Alert.AlertType.INFORMATION);
+            about.setTitle("Help");
+            about.setHeaderText("Nolan's Pain(t)");
+            about.setContentText("""
+                Open - Opens an image.
+                Save - Saves changes to the image to it's current file.
+                Save As - Saves the image to a new file.
+                Exit - Closes the application.
+            """);
+            about.showAndWait();
+        });
+
+        // About
+        menu.getAboutItem().setOnAction(event -> {
+            Alert about = new Alert(Alert.AlertType.INFORMATION);
+            about.setTitle("About");
+            about.setHeaderText("Nolan's Pain(t)");
+            about.setContentText("Version 0.2.0");
+            about.showAndWait();
         });
         
         // create the scene and set it on the stage

@@ -13,7 +13,12 @@ public class CustomMenuBar {
     private final MenuItem saveAsItem;
     private final MenuItem exitItem;
 
+    private final MenuItem helpItem;
+    private final MenuItem aboutItem;
+
     public CustomMenuBar() {
+
+        // file
         Menu fileMenu = new Menu("File");
 
         openItem = new MenuItem("Open");
@@ -28,8 +33,23 @@ public class CustomMenuBar {
             exitItem
         );
 
+        // help
+        Menu helpMenu = new Menu("Help");
+
+        helpItem = new MenuItem("Help");
+        aboutItem = new MenuItem("About");
+
+        helpMenu.getItems().addAll(
+            helpItem,
+            aboutItem
+        );
+
+        // bar assembly
         menuBar = new MenuBar();
-        menuBar.getMenus().add(fileMenu);
+        menuBar.getMenus().addAll(
+            fileMenu,
+            helpMenu
+        );
     }
 
     public MenuBar getMenuBar() {
@@ -47,5 +67,11 @@ public class CustomMenuBar {
     public MenuItem getExitItem() {
         return exitItem;
     }
-    
+    public MenuItem getHelpItem() {
+        return helpItem;
+    }
+    public MenuItem getAboutItem() {
+        return aboutItem;
+    }
+
 }
