@@ -66,10 +66,10 @@ public class FileService {
      * @param image
      * @throws IOException
      */
-    public void saveImageAs(Stage stage, Image image) throws IOException {
+    public boolean saveImageAs(Stage stage, Image image) throws IOException {
         System.out.println("Saving image as...");
         if (image == null) {
-            return;
+            return false;
         }
 
         FileChooser fileChooser = new FileChooser();
@@ -100,7 +100,11 @@ public class FileService {
             System.out.println("Saving image to: " + selectedFile.getAbsolutePath());
             currentFile = selectedFile;
             writeImage(image, currentFile);
+
+            return true;
         }
+
+        return false;
     }
 
     /**

@@ -81,8 +81,14 @@ public class Main extends Application {
         // Save As
         menu.getSaveAsItem().setOnAction(event -> {
             try {
-                fileService.saveImageAs(stage, imageController.getModifiedImage()); // save the modified image to a new file chosen by the user
-                imageController.getDrawingCanvas().setModified(false); 
+                boolean saved = fileService.saveImageAs(
+                    stage, 
+                    imageController.getModifiedImage()
+                );
+
+                if (saved) {
+                    imageController.getDrawingCanvas().setModified(false); 
+                }
             } catch (Exception e) {
                 ExceptionHandler.printFormattedException(e);
             }
