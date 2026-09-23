@@ -1,24 +1,21 @@
-Nolan's Pain(t) Version 0.1.0 -  09/11/2026
+Nolan's Pain(t) Version 0.2.0 -  09/22/2026
 
 New features:
 
-  * Menu Bar
-  * Display PNG and JPG
-  * Image saving
-  * Save As
-  * Exit Option
-  * File Selection
+  * Proper image saving
+  * More Extension Support
+  * Basic Drawing Capabilities
 
 Known issues:
 
-  * Save As can only do PNG
+  * Need to fix displaying images bigger than the actual application window.
 
 Expected next sprint:
 
-  * Drawing
+  * 
 
 GitHub Repository:
 https://github.com/spoon599/PaintApp
 
 GitHub Release:
-https://github.com/spoon599/PaintApp/releases/tag/v0.1.0
+https://github.com/spoon599/PaintApp/releases/tag/v0.2.0

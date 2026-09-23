@@ -25,10 +25,18 @@ public class FileService {
         
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Image");
-        fileChooser.getExtensionFilters().add(
+        fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter(
-                "Image Files",
-                "*.png", "*.jpg", "*.jpeg", "*.bmp"
+                "PNG",
+                "*.png"
+            ),
+            new FileChooser.ExtensionFilter(
+                "JPG",
+                "*.jpg", "*.jpeg"
+            ),
+            new FileChooser.ExtensionFilter(
+                "BMP",
+                "*.bmp"
             )
         );
 
@@ -59,16 +67,25 @@ public class FileService {
      * @throws IOException
      */
     public void saveImageAs(Stage stage, Image image) throws IOException {
+        System.out.println("Saving image as...");
         if (image == null) {
             return;
         }
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Image As"); 
-        fileChooser.getExtensionFilters().add( // add extension filter for image files
+        fileChooser.getExtensionFilters().addAll( // add extension filter for image files
             new FileChooser.ExtensionFilter(
-                "Image Files",
-                "*.png", "*.jpg", "*.jpeg", "*.bmp"
+                "PNG",
+                "*.png"
+            ),
+            new FileChooser.ExtensionFilter(
+                "JPG",
+                "*.jpg", "*.jpeg"
+            ),
+            new FileChooser.ExtensionFilter(
+                "BMP",
+                "*.bmp"
             )
         );
 
@@ -80,6 +97,7 @@ public class FileService {
                 selectedFile = new File(selectedFile.getAbsolutePath() + ".png");
             }
 
+            System.out.println("Saving image to: " + selectedFile.getAbsolutePath());
             currentFile = selectedFile;
             writeImage(image, currentFile);
         }
@@ -108,7 +126,7 @@ public class FileService {
     private void writeImage(Image image, File file) throws IOException {
         String extension = getExtension(file); // get the file's extension as a string
         RenderedImage render = SwingFXUtils.fromFXImage(image, null); // get rendered image from fx image
-        
+
         boolean success = ImageIO.write(render, extension, file); // write to file
         if (!success) {
             throw new IOException(

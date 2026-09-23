@@ -15,7 +15,7 @@ import javafx.scene.layout.BorderPane;
 
 public class Main extends Application {
 
-    @Override 
+    @Override
     public void start(Stage stage) {
 
         // main controllers and services
@@ -25,12 +25,12 @@ public class Main extends Application {
         MenuBarFactory menu = new MenuBarFactory();
 
         root.setTop(menu.getMenuBar()); // set the top of the border pane to the menu bar
-        root.setCenter(imageController.getStackPane()); // set the center of the border pane to the stack pane containing the image and canvas
+        root.setCenter(imageController.getWorkspace()); // set to workspace
         
         // Open
         menu.getOpenItem().setOnAction(event -> {
             Image image = fileService.openImage(stage);
-
+            
             if (image != null) {
                 imageController.setImage(image);
             }
@@ -44,18 +44,36 @@ public class Main extends Application {
         // Save
         menu.getSaveItem().setOnAction(event -> {
             try {
-                fileService.saveImage(imageController.getModifiedImage());
+                fileService.saveImage(imageController.getModifiedImage()); // save the modified image to the current file
             } catch (Exception e) {
-                e.printStackTrace();
+                StackTraceElement trace = e.getStackTrace()[0];
+                System.err.println("""
+                        %s%s Failed: %s
+                        File: %s
+                        Line: %d"""
+                        .formatted(
+                            "\u001B[31m", trace.getMethodName(), e.getMessage(),
+                            trace.getFileName(),
+                            trace.getLineNumber(), "\u001B[0m"
+                        ));
             }
         });
 
         // Save As
         menu.getSaveAsItem().setOnAction(event -> {
             try {
-                fileService.saveImageAs(stage, imageController.getImage());
+                fileService.saveImageAs(stage, imageController.getModifiedImage()); // save the modified image to a new file chosen by the user
             } catch (Exception e) {
-                e.printStackTrace();
+                StackTraceElement trace = e.getStackTrace()[0];
+                System.err.println("""
+                        %s%s Failed: %s
+                        File: %s
+                        Line: %d%s"""
+                        .formatted(
+                            "\u001B[31m", trace.getMethodName(), e.getMessage(),
+                            trace.getFileName(),
+                            trace.getLineNumber(), "\u001B[0m"
+                        ));
             }
         });
         

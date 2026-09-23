@@ -1,18 +1,21 @@
 package com.example.paintapp.controllers;
 
+import com.example.paintapp.classes.CustomCanvas;
+import com.example.paintapp.classes.CustomStackPane;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.StackPane;
-import javafx.scene.canvas.Canvas;
+
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class ImageController {
 
     private final ImageView imageView;
-    private final Canvas canvas;
-    private final StackPane stackPane;
+    private final CustomCanvas canvas; // drawing sheet
+    private final CustomStackPane stackPane; // snapshot container (image + drawing sheet)
+    private final CustomStackPane workspace; // global allignment pane
 
     private double lastX;
     private double lastY;
@@ -24,13 +27,17 @@ public class ImageController {
         imageView = new ImageView();
         imageView.setPreserveRatio(true); // preserve image's aspect ratio when setting a new image
 
-        canvas = new Canvas();
+        canvas = new CustomCanvas();
         
-        stackPane = new StackPane();
+        // actual image stack
+        stackPane = new CustomStackPane();
         stackPane.getChildren().addAll(
             imageView, // add this first as our bottom layer
             canvas // invisible top layer for drawing
-        ); 
+        );
+
+        // used to center the stackPane
+        workspace = new CustomStackPane(stackPane); // workspace -> stackPane -> imageView & canvas
 
         setupDrawing();
     }
@@ -52,8 +59,15 @@ public class ImageController {
     /**
      * Returns the pane containing the image and drawing canvas.
      */
-    public StackPane getStackPane() {
+    public CustomStackPane getStackPane() {
         return stackPane;
+    }
+
+    /**
+     * Returns the workspace stackpane.
+     */
+    public CustomStackPane getWorkspace() {
+        return workspace;
     }
 
     /**
@@ -62,11 +76,8 @@ public class ImageController {
      */
     public void setImage(Image image) {
         imageView.setImage(image); // apply image (aspect ratio preserved by default)
-
-        // adjust canvas size to match the new image dimensions
-        canvas.setWidth(image.getWidth());
-        canvas.setHeight(image.getHeight());
-
+        canvas.sizeTo(image);
+        stackPane.sizeTo(image);
         cleanCanvas(); // clear the canvas when a new image is set
     }
 
@@ -108,13 +119,24 @@ public class ImageController {
         graphics.restore();
     }
 
+    /**
+     * Returns a snapshot of the current image and drawings as a new image.
+     */
     public Image getModifiedImage() {
-        WritableImage writableImage = new WritableImage(
-            (int) canvas.getWidth(), 
-            (int) canvas.getHeight()
+        int width = (int) canvas.getWidth();
+        int height = (int) canvas.getHeight();
+
+        if (width <= 0 || height <= 0) {
+            throw new IllegalStateException("Canvas dimensions must be positive to create a modified image.");
+        }
+
+        WritableImage modifiedImage = new WritableImage(
+            width,
+            height
         );
-        stackPane.snapshot(null, writableImage);
-        return writableImage;
+        
+        stackPane.snapshot(null, modifiedImage); // take a snapshot of the current stack pane (should be image + drawings)
+        return modifiedImage;
     }
     
 }
