@@ -1,12 +1,14 @@
 package paintapp;
 
+import paintapp.controllers.ImageController;
+import paintapp.services.FileService;
+import paintapp.ui.MenuBarFactory;
+import paintapp.utils.ExceptionHandler;
 import javafx.application.Application;
 import javafx.application.Platform;
 
 import javafx.stage.Stage;
-import paintapp.controllers.ImageController;
-import paintapp.services.FileService;
-import paintapp.ui.MenuBarFactory;
+
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
@@ -45,7 +47,7 @@ public class Main extends Application {
             try {
                 fileService.saveImage(imageController.getModifiedImage()); // save the modified image to the current file
             } catch (Exception e) {
-                printFormattedException(e);
+                ExceptionHandler.printFormattedException(e);
             }
         });
 
@@ -54,7 +56,7 @@ public class Main extends Application {
             try {
                 fileService.saveImageAs(stage, imageController.getModifiedImage()); // save the modified image to a new file chosen by the user
             } catch (Exception e) {
-                printFormattedException(e);
+                ExceptionHandler.printFormattedException(e);
             }
         });
         
@@ -68,20 +70,6 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch();
-    }
-
-    private void printFormattedException(Exception e) {
-        StackTraceElement trace = e.getStackTrace()[0];
-        System.err.println("""
-            %s%s Failed: %s
-            File: %s
-            Line: %d%s"""
-            .formatted(
-                "\u001B[31m", trace.getMethodName(), e.getMessage(),
-                trace.getFileName(),
-                trace.getLineNumber(), "\u001B[0m"
-            )
-        );
     }
     
 }
