@@ -50,5 +50,9 @@ public class DrawingCanvas extends CustomCanvas {
     public void setLineWidth(double width) {
         this.getGraphicsContext2D().setLineWidth(width);
     }
+
+    public void setLineColor(Color color) {
+        this.getGraphicsContext2D().setStroke(color);
+    }
     
 }

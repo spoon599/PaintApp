@@ -38,6 +38,11 @@ public class Main extends Application {
                 imageController.getDrawingCanvas().setLineWidth(newVal.doubleValue());
             }
         );
+        toolbar.getColorPicker().valueProperty().addListener(
+            (observable, oldColor, newColor) -> {
+                imageController.getDrawingCanvas().setLineColor(newColor);
+            }
+        );
 
         root.setTop(container); // set to top container
         root.setCenter(imageController.getScrollPane()); // set to our scroll pane, top of stack
