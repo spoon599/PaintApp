@@ -4,6 +4,10 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+
 public class CustomMenuBar {
 
     private final MenuBar menuBar;
@@ -22,11 +26,27 @@ public class CustomMenuBar {
 
         // file
         Menu fileMenu = new Menu("File");
-
+        
         openItem = new MenuItem("Open");
-        saveItem = new MenuItem("Save");
-        saveAsItem = new MenuItem("Save As");
+        openItem.setAccelerator(
+            new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN)
+        );
+
         exitItem = new MenuItem("Exit");
+
+        saveItem = new MenuItem("Save");
+        saveItem.setAccelerator(
+            new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN)
+        );
+
+        saveAsItem = new MenuItem("Save As");
+        saveAsItem.setAccelerator(
+            new KeyCodeCombination(
+            KeyCode.S,
+            KeyCombination.SHORTCUT_DOWN,
+            KeyCombination.SHIFT_DOWN
+            )
+        );
 
         fileMenu.getItems().addAll(
             openItem,

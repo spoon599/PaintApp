@@ -7,6 +7,8 @@ import javafx.scene.paint.Color;
 
 public class DrawingCanvas extends CustomCanvas {
 
+    private double startX;
+    private double startY;
     private double lastX;
     private double lastY;
 
@@ -23,20 +25,38 @@ public class DrawingCanvas extends CustomCanvas {
         graphics.setLineWidth(3);
 
         this.setOnMousePressed(event -> {
-            lastX = event.getX();
-            lastY = event.getY();
+            startX = event.getX();
+            startY = event.getY();
+
+            lastX = startX;
+            lastY = startY;
         });
 
         this.setOnMouseDragged(event -> {
-            double currentX = event.getX();
-            double currentY = event.getY();
+            if (currentTool == DrawingTool.PENCIL) {
+                double currentX = event.getX();
+                double currentY = event.getY();
 
-            graphics.strokeLine(lastX, lastY, currentX, currentY);
-            modified = true;
+                graphics.strokeLine(lastX, lastY, currentX, currentY);
+                modified = true;
 
-            lastX = currentX;
-            lastY = currentY;
+                lastX = currentX;
+                lastY = currentY;
+            }
         });
+
+        this.setOnMouseReleased(event -> {
+            if (currentTool == DrawingTool.LINE) {
+                graphics.strokeLine(
+                    startX,
+                    startY,
+                    event.getX(),
+                    event.getY()
+                );
+                modified = true;
+            }
+        });
+
     }
 
     /**
@@ -80,5 +100,23 @@ public class DrawingCanvas extends CustomCanvas {
     public void setModified(boolean value) {
         modified = value;
     }
-    
+
+    /**
+     * The drawing tools supported by this canvas.
+     */
+    public enum DrawingTool {
+        PENCIL,
+        LINE
+    }
+
+    private DrawingTool currentTool = DrawingTool.PENCIL;
+
+    /**
+     * Sets the tool used for subsequent drawing gestures.
+     *
+     * @param tool the drawing tool to use
+     */
+    public void setCurrentTool(DrawingTool tool) {
+        currentTool = tool;
+    }
 }

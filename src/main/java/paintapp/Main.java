@@ -46,7 +46,6 @@ public class Main extends Application {
             toolbar.getToolBar()
         );
 
-        // line width event
         toolbar.getLineWidthSlider().valueProperty().addListener(
             (observable, oldVal, newVal) -> {
                 imageController.getDrawingCanvas().setLineWidth(newVal.doubleValue());
@@ -55,6 +54,11 @@ public class Main extends Application {
         toolbar.getColorPicker().valueProperty().addListener(
             (observable, oldColor, newColor) -> {
                 imageController.getDrawingCanvas().setLineColor(newColor);
+            }
+        );
+        toolbar.getToolSelector().valueProperty().addListener(
+            (observable, oldTool, newTool) -> {
+                imageController.getDrawingCanvas().setCurrentTool(newTool);
             }
         );
 
