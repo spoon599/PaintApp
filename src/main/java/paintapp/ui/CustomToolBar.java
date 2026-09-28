@@ -7,6 +7,8 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.paint.Color;
 
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.CheckBox;
+
 import paintapp.classes.DrawingCanvas.DrawingTool;
 
 public class CustomToolBar {
@@ -14,7 +16,9 @@ public class CustomToolBar {
     private final ToolBar toolBar;
     private final Slider lineWidthSlider;
     private final ColorPicker colorPicker;
+
     private final ComboBox<DrawingTool> toolSelector;
+    private final CheckBox dashedCheckBox;
 
     public CustomToolBar() {
 
@@ -36,13 +40,16 @@ public class CustomToolBar {
         toolSelector.getItems().addAll(DrawingTool.values());
         toolSelector.setValue(DrawingTool.PENCIL);
 
+        dashedCheckBox = new CheckBox("Dashed outlines");
+
         toolBar = new ToolBar(
             toolSelector,
             lineWidthLabel,
             lineWidthSlider,
             lineWidthValueLabel,
             colorLabel,
-            colorPicker
+            colorPicker,
+            dashedCheckBox
         );
     }
 
@@ -57,6 +64,9 @@ public class CustomToolBar {
     }
     public ComboBox<DrawingTool> getToolSelector() {
         return toolSelector;
+    }
+    public CheckBox getDashedCheckBox() {
+        return dashedCheckBox;
     }
 
 }

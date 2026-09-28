@@ -15,6 +15,7 @@ public class DrawingCanvas extends CustomCanvas {
     private double lastY;
 
     private boolean modified = false;
+    private boolean dashed = false;
 
     public DrawingCanvas() {}
 
@@ -118,14 +119,14 @@ public class DrawingCanvas extends CustomCanvas {
         RECTANGLE,
         SQUARE,
         ELLIPSE,
-        CIRCLE
+        CIRCLE,
+        TRIANGLE
     }
 
     private DrawingTool currentTool = DrawingTool.PENCIL;
 
     /**
      * Sets the tool used for subsequent drawing gestures.
-     *
      * @param tool the drawing tool to use
      */
     public void setCurrentTool(DrawingTool tool) {
@@ -141,13 +142,27 @@ public class DrawingCanvas extends CustomCanvas {
     }
 
     /**
+     * Sets whether lines and shape outlines use dashes.
+     * @param dashed true for dashed outlines, false for solid outlines
+     */
+    public void setDashed(boolean dashed) {
+        this.dashed = dashed;
+    }
+
+    /**
      * Draws the selected shape from the gesture's starting point.
-     *
      * @param endX the horizontal endpoint
      * @param endY the vertical endpoint
      */
     private void drawShape(double endX, double endY) {
         GraphicsContext graphics = getGraphicsContext2D();
+        graphics.save();
+
+        if (dashed) {
+            graphics.setLineDashes(10, 6);
+        } else {
+            graphics.setLineDashes();
+        }
 
         if (currentTool == DrawingTool.LINE) {
             graphics.strokeLine(startX, startY, endX, endY);
@@ -185,6 +200,26 @@ public class DrawingCanvas extends CustomCanvas {
             double y = endY < startY ? startY - diameter : startY;
 
             graphics.strokeOval(x, y, diameter, diameter);
+        } else if (currentTool == DrawingTool.TRIANGLE) {
+            double x = Math.min(startX, endX);
+            double y = Math.min(startY, endY);
+            double width = Math.abs(endX - startX);
+            double height = Math.abs(endY - startY);
+
+            double[] xPoints = {
+                x + width / 2,
+                x + width,
+                x
+            };
+
+            double[] yPoints = {
+                y,
+                y + height,
+                y + height
+            };
+
+            graphics.strokePolygon(xPoints, yPoints, 3);
+            graphics.restore();
         }
     }
 
@@ -197,6 +232,7 @@ public class DrawingCanvas extends CustomCanvas {
             || currentTool == DrawingTool.SQUARE
             || currentTool == DrawingTool.ELLIPSE
             || currentTool == DrawingTool.CIRCLE
+            || currentTool == DrawingTool.TRIANGLE
         ) {
             return true;
         }

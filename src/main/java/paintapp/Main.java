@@ -61,6 +61,11 @@ public class Main extends Application {
                 imageController.getDrawingCanvas().setCurrentTool(newTool);
             }
         );
+        toolbar.getDashedCheckBox().selectedProperty().addListener(
+            (observable, oldValue, newValue) -> {
+                imageController.getDrawingCanvas().setDashed(newValue);
+            }
+        );
 
         root.setTop(container); // set to top container
         root.setCenter(imageController.getScrollPane()); // set to our scroll pane, top of stack
