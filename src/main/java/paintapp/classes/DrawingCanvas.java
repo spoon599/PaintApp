@@ -7,6 +7,8 @@ import javafx.scene.paint.Color;
 
 public class DrawingCanvas extends CustomCanvas {
 
+    private WritableImage drawingBeforeGesture;
+
     private double startX;
     private double startY;
     private double lastX;
@@ -30,6 +32,11 @@ public class DrawingCanvas extends CustomCanvas {
 
             lastX = startX;
             lastY = startY;
+            if (currentTool == DrawingTool.LINE || currentTool == DrawingTool.RECTANGLE) {
+                SnapshotParameters params = new SnapshotParameters();
+                params.setFill(Color.TRANSPARENT);
+                drawingBeforeGesture = snapshot(params, null);
+            }
         });
 
         this.setOnMouseDragged(event -> {
@@ -42,18 +49,19 @@ public class DrawingCanvas extends CustomCanvas {
 
                 lastX = currentX;
                 lastY = currentY;
+            } else if (currentTool == DrawingTool.LINE  || currentTool == DrawingTool.RECTANGLE) {
+                restoreDrawingBeforeGesture();
+                drawShape(event.getX(), event.getY());
             }
         });
 
         this.setOnMouseReleased(event -> {
-            if (currentTool == DrawingTool.LINE) {
-                graphics.strokeLine(
-                    startX,
-                    startY,
-                    event.getX(),
-                    event.getY()
-                );
+            if (currentTool == DrawingTool.LINE || currentTool == DrawingTool.RECTANGLE) {
+                restoreDrawingBeforeGesture();
+                drawShape(event.getX(), event.getY());
+                
                 modified = true;
+                drawingBeforeGesture = null;
             }
         });
 
@@ -106,7 +114,8 @@ public class DrawingCanvas extends CustomCanvas {
      */
     public enum DrawingTool {
         PENCIL,
-        LINE
+        LINE,
+        RECTANGLE
     }
 
     private DrawingTool currentTool = DrawingTool.PENCIL;
@@ -118,5 +127,34 @@ public class DrawingCanvas extends CustomCanvas {
      */
     public void setCurrentTool(DrawingTool tool) {
         currentTool = tool;
+    }
+
+    /**
+     * Restores the drawing as it was before the current gesture.
+     */
+    private void restoreDrawingBeforeGesture() {
+        clearDrawings();
+        getGraphicsContext2D().drawImage(drawingBeforeGesture, 0, 0);
+    }
+
+    /**
+     * Draws the selected shape from the gesture's starting point.
+     *
+     * @param endX the horizontal endpoint
+     * @param endY the vertical endpoint
+     */
+    private void drawShape(double endX, double endY) {
+        GraphicsContext graphics = getGraphicsContext2D();
+
+        if (currentTool == DrawingTool.LINE) {
+            graphics.strokeLine(startX, startY, endX, endY);
+        } else if (currentTool == DrawingTool.RECTANGLE) {
+            double x = Math.min(startX, endX);
+            double y = Math.min(startY, endY);
+            double width = Math.abs(endX - startX);
+            double height = Math.abs(endY - startY);
+
+            graphics.strokeRect(x, y, width, height);
+        }
     }
 }

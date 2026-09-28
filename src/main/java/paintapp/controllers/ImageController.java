@@ -4,7 +4,7 @@ import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-
+import javafx.scene.paint.Color;
 import paintapp.classes.CustomScrollPane;
 import paintapp.classes.CustomStackPane;
 import paintapp.classes.DrawingCanvas;
@@ -44,6 +44,7 @@ public class ImageController {
         scrollPane.setFitToDimensions(true);
 
         drawingCanvas.setupDrawing();
+        createBlankImage(800, 500);
     }
     
     public Image getImage() {
@@ -95,6 +96,25 @@ public class ImageController {
         
         stackPane.snapshot(null, modifiedImage); // take a snapshot of the current stack pane (should be image + drawings)
         return modifiedImage;
+    }
+
+    /**
+     * Creates a blank white image and prepares the drawing area.
+     *
+     * @param width width in pixels
+     * @param height height in pixels
+     */
+    private void createBlankImage(int width, int height) {
+        WritableImage blankImage = new WritableImage(width, height);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                blankImage.getPixelWriter().setColor(x, y, Color.WHITE);
+            }
+        }
+
+        setImage(blankImage);
+        drawingCanvas.setModified(false);
     }
     
 }
