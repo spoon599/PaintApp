@@ -120,7 +120,8 @@ public class DrawingCanvas extends CustomCanvas {
         SQUARE,
         ELLIPSE,
         CIRCLE,
-        TRIANGLE
+        TRIANGLE,
+        COLOR_GRABBER
     }
 
     private DrawingTool currentTool = DrawingTool.PENCIL;

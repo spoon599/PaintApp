@@ -5,6 +5,7 @@ import paintapp.services.FileService;
 import paintapp.ui.CustomMenuBar;
 import paintapp.ui.CustomToolBar;
 import paintapp.utils.ExceptionHandler;
+import paintapp.classes.DrawingCanvas.DrawingTool;
 
 import java.util.Optional;
 
@@ -24,6 +25,9 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
+
 
 public class Main extends Application {
 
@@ -64,6 +68,22 @@ public class Main extends Application {
         toolbar.getDashedCheckBox().selectedProperty().addListener(
             (observable, oldValue, newValue) -> {
                 imageController.getDrawingCanvas().setDashed(newValue);
+            }
+        );
+
+        imageController.getDrawingCanvas().addEventHandler(
+            MouseEvent.MOUSE_PRESSED,
+            event -> {
+                if (toolbar.getToolSelector().getValue() == DrawingTool.COLOR_GRABBER) {
+                    Color sampledColor = imageController.readColorAt(
+                        event.getX(),
+                        event.getY()
+                    );
+
+                    if (sampledColor != null) {
+                        toolbar.getColorPicker().setValue(sampledColor);
+                    }
+                }
             }
         );
 

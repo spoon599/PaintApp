@@ -116,5 +116,25 @@ public class ImageController {
         setImage(blankImage);
         drawingCanvas.setModified(false);
     }
+
+    /**
+     * Reads the color at the given pixel
+     * @return the color of the given position or null if it isn't within the dimensions of the canvas
+     */
+    public Color readColorAt(double x, double y) {
+        if (x < 0 || y < 0
+            || x >= drawingCanvas.getWidth()
+            || y >= drawingCanvas.getHeight()
+        ) {
+            return null;
+        }
+
+        Image image = getModifiedImage();
+
+        return image.getPixelReader().getColor(
+            (int) x,
+            (int) y
+        );
+    }
     
 }
