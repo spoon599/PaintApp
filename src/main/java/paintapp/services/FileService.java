@@ -148,4 +148,12 @@ public class FileService {
         }
     }
 
+    /**
+     * Returns the current filename for display.
+     * @return the filename (Untitled if no file is associated)
+     */
+    public String getFileName() {
+        return currentFile == null ? "Untitled" : currentFile.getName();
+    }
+
 }

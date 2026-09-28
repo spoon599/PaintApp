@@ -22,10 +22,17 @@ public class CustomMenuBar {
     private final MenuItem helpItem;
     private final MenuItem aboutItem;
 
+    private final MenuItem newItem;
+
     public CustomMenuBar() {
 
         // file
         Menu fileMenu = new Menu("File");
+
+        newItem = new MenuItem("New");
+        newItem.setAccelerator(
+            new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN)
+        );
         
         openItem = new MenuItem("Open");
         openItem.setAccelerator(
@@ -49,6 +56,7 @@ public class CustomMenuBar {
         );
 
         fileMenu.getItems().addAll(
+            newItem,
             openItem,
             saveItem,
             saveAsItem,
@@ -103,6 +111,9 @@ public class CustomMenuBar {
     }
     public MenuItem getResizeItem() {
         return resizeItem;
+    }
+    public MenuItem getNewItem() {
+        return newItem;
     }
 
 }

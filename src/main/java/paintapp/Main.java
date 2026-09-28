@@ -6,6 +6,7 @@ import paintapp.ui.CustomMenuBar;
 import paintapp.ui.CustomToolBar;
 import paintapp.utils.ExceptionHandler;
 import paintapp.classes.DrawingCanvas.DrawingTool;
+import paintapp.classes.ImageTab;
 
 import java.util.Optional;
 
@@ -21,13 +22,13 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-
 
 public class Main extends Application {
 
@@ -40,10 +41,12 @@ public class Main extends Application {
 
         // main controllers and services
         BorderPane root = new BorderPane();
-        ImageController imageController = new ImageController();
-        FileService fileService = new FileService();
         CustomMenuBar menu = new CustomMenuBar();
         CustomToolBar toolbar = new CustomToolBar();
+        ImageTab initialTab = new ImageTab("Untitled");
+
+        TabPane tabPane = new TabPane();
+        tabPane.getTabs().add(initialTab);
 
         VBox container = new VBox(
             menu.getMenuBar(),
@@ -51,90 +54,113 @@ public class Main extends Application {
         );
 
         toolbar.getLineWidthSlider().valueProperty().addListener(
-            (observable, oldVal, newVal) -> {
-                imageController.getDrawingCanvas().setLineWidth(newVal.doubleValue());
-            }
+            (observable, oldValue, newValue) ->
+                applyToolbarSettings(tabPane, toolbar)
         );
+
         toolbar.getColorPicker().valueProperty().addListener(
-            (observable, oldColor, newColor) -> {
-                imageController.getDrawingCanvas().setLineColor(newColor);
-            }
+            (observable, oldValue, newValue) ->
+                applyToolbarSettings(tabPane, toolbar)
         );
+
         toolbar.getToolSelector().valueProperty().addListener(
-            (observable, oldTool, newTool) -> {
-                imageController.getDrawingCanvas().setCurrentTool(newTool);
-            }
+            (observable, oldValue, newValue) ->
+                applyToolbarSettings(tabPane, toolbar)
         );
+
         toolbar.getDashedCheckBox().selectedProperty().addListener(
-            (observable, oldValue, newValue) -> {
-                imageController.getDrawingCanvas().setDashed(newValue);
-            }
+            (observable, oldValue, newValue) ->
+                applyToolbarSettings(tabPane, toolbar)
         );
 
-        imageController.getDrawingCanvas().addEventHandler(
-            MouseEvent.MOUSE_PRESSED,
-            event -> {
-                if (toolbar.getToolSelector().getValue() == DrawingTool.COLOR_GRABBER) {
-                    Color sampledColor = imageController.readColorAt(
-                        event.getX(),
-                        event.getY()
-                    );
-
-                    if (sampledColor != null) {
-                        toolbar.getColorPicker().setValue(sampledColor);
-                    }
-                }
-            }
+        tabPane.getSelectionModel().selectedItemProperty().addListener(
+            (observable, oldTab, newTab) ->
+                applyToolbarSettings(tabPane, toolbar)
         );
+
+        applyToolbarSettings(tabPane, toolbar);
+        setupColorGrabber(initialTab, toolbar);
+        setupTabClosing(stage, tabPane, initialTab);
 
         root.setTop(container); // set to top container
-        root.setCenter(imageController.getScrollPane()); // set to our scroll pane, top of stack
-        // current hierarchy goes ScrollPane -> workspace -> stackpane -> imageview + canvas
-        
+        root.setCenter(tabPane); // set to our tab pane, top of stack
+        // current hierarchy goes tabPane -> scrollPane -> workspace -> stackpane -> imageview + canvas
+
+        // New
+        menu.getNewItem().setOnAction(event -> {
+            ImageTab newTab = new ImageTab("Untitled");
+
+            setupColorGrabber(newTab, toolbar);
+            setupTabClosing(stage, tabPane, newTab);
+
+            tabPane.getTabs().add(newTab);
+            tabPane.getSelectionModel().select(newTab);
+        });
+
         // Open
         menu.getOpenItem().setOnAction(event -> {
-            attemptOpen(stage, imageController, fileService);
+            attemptOpen(stage, tabPane, toolbar);
         });
 
         // Exit
         menu.getExitItem().setOnAction(event -> {
-            attemptExit(stage, imageController, fileService);
+            attemptExit(stage, tabPane);
         });
 
         // Save
         menu.getSaveItem().setOnAction(event -> {
-            try {
-                boolean saved = fileService.saveImage(
-                    stage,
-                    imageController.getModifiedImage()
-                ); // save the modified image to the current file
-
-                if (saved) {
-                    imageController.getDrawingCanvas().setModified(false);
+            if (tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab) {
+                var controller = selectedTab.getImageController();
+                var files = selectedTab.getFileService();
+                    
+                try {
+                    boolean saved = files.saveImage(
+                        stage,
+                        controller.getModifiedImage()
+                    );
+                
+                    if (saved) {
+                        controller.getDrawingCanvas().setModified(false);
+                        selectedTab.setText(files.getFileName());
+            }
+                } catch (Exception e) {
+                    ExceptionHandler.printFormattedException(e);
                 }
-            } catch (Exception e) {
-                ExceptionHandler.printFormattedException(e);
             }
         });
 
         // Save As
         menu.getSaveAsItem().setOnAction(event -> {
-            try {
-                boolean saved = fileService.saveImageAs(
-                    stage, 
-                    imageController.getModifiedImage()
-                );
-
-                if (saved) {
-                    imageController.getDrawingCanvas().setModified(false); 
+            if (tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab) {
+                var controller = selectedTab.getImageController();
+                var files = selectedTab.getFileService();
+                    
+                try {
+                    boolean saved = files.saveImageAs(
+                        stage,
+                        controller.getModifiedImage()
+                    );
+                
+                    if (saved) {
+                        controller.getDrawingCanvas().setModified(false);
+                        selectedTab.setText(files.getFileName());
+                    }
+                } catch (Exception e) {
+                    ExceptionHandler.printFormattedException(e);
                 }
-            } catch (Exception e) {
-                ExceptionHandler.printFormattedException(e);
             }
         });
 
         // Resize
         menu.getResizeItem().setOnAction(event -> {
+            if (!(tabPane.getSelectionModel().getSelectedItem() instanceof ImageTab selectedTab)) {
+                return;
+            }
+
+            var controller = selectedTab.getImageController();
+
             Dialog<ButtonType> resizeDialog = new Dialog<>();
             resizeDialog.setTitle("Resize Canvas");
             resizeDialog.setHeaderText("Enter the new canvas size.");
@@ -168,9 +194,9 @@ public class Main extends Application {
                     double height = Double.parseDouble(heightField.getText());
 
                     if (width > 0 && height > 0) {
-                        imageController.getDrawingCanvas().resizeDrawing(width, height);
-                        imageController.getStackPane().setSize(width, height);
-                        imageController.getDrawingCanvas().setModified(true);
+                        controller.getDrawingCanvas().resizeDrawing(width, height);
+                        controller.getStackPane().setSize(width, height);
+                        controller.getDrawingCanvas().setModified(true);
                     }
                 } catch (Exception e) {
                     ExceptionHandler.printFormattedException(e);
@@ -207,7 +233,7 @@ public class Main extends Application {
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> {
             event.consume(); // overrides default window closing
-            attemptExit(stage, imageController, fileService);
+            attemptExit(stage, tabPane);
         });
         
         stage.show();
@@ -218,76 +244,65 @@ public class Main extends Application {
         launch();
     }
 
-    private void attemptExit(
-        Stage stage,
-        ImageController imageController,
-        FileService fileService
-    ) {
-        if (imageController.getDrawingCanvas().isModified()) {
-            Optional<ButtonType> result = showUnsavedChangesAlert();
-            if (result.isEmpty()) {
-                return;
-            }
+    /**
+     * Checks all image tabs for unsaved changes before exiting.
+     *
+     * @param stage the application window
+     * @param tabPane the pane containing the image tabs
+     */
+    private void attemptExit(Stage stage, TabPane tabPane) {
+        for (var tab : tabPane.getTabs()) {
+            if (tab instanceof ImageTab imageTab) {
+                tabPane.getSelectionModel().select(imageTab);
 
-            ButtonType selectedButton = result.get();
-            if (selectedButton == saveButton) {
-                try {
-                    boolean saved = fileService.saveImage(
-                    stage,
-                    imageController.getModifiedImage()
-                );
-
-                if (saved) {
-                    imageController.getDrawingCanvas().setModified(false);
-                    Platform.exit();
-                }
-                
-                } catch (Exception e) {
-                    ExceptionHandler.printFormattedException(e);
-                }
-            } else if (selectedButton == dontSaveButton) {
-                Platform.exit();
-            }
-        } else {
-            Platform.exit();
-        }
-    }
-
-    private void attemptOpen(
-        Stage stage,
-        ImageController imageController,
-        FileService fileService
-    ) {
-        if (imageController.getDrawingCanvas().isModified()) {
-            Optional<ButtonType> result = showUnsavedChangesAlert();
-            if (result.isEmpty()) {
-                return;
-            }
-
-            ButtonType selectedButton = result.get();
-            if (selectedButton == saveButton) {
-                try {
-                    boolean saved = fileService.saveImage(
-                        stage,
-                        imageController.getModifiedImage()
-                    );
-
-                    if (!saved) {
-                        return;
-                    }
-                    imageController.getDrawingCanvas().setModified(false);
-                } catch (Exception e) {
-                    ExceptionHandler.printFormattedException(e);
+                if (!confirmTabClose(stage, imageTab)) {
                     return;
                 }
-            } else if (selectedButton == cancelButton) {
-                return;
             }
         }
 
-        Image image = fileService.openImage(stage);
-        if (image != null) {
-            imageController.setImage(image);
+        Platform.exit();
+    }
+
+    /**
+     * Opens an image in a new tab.
+     *
+     * @param stage the application window
+     * @param tabPane the pane containing the image tabs
+     * @param toolbar the shared drawing controls
+     */
+    private void attemptOpen(
+        Stage stage,
+        TabPane tabPane,
+        CustomToolBar toolbar
+    ) {
+        ImageTab newTab = new ImageTab("Untitled");
+        var files = newTab.getFileService();
+
+        try {
+            Image image = files.openImage(stage);
+
+            if (image == null) {
+                return;
+            }
+
+            if (image.isError()) {
+                throw new IllegalArgumentException(
+                    "Could not load the selected image.",
+                    image.getException()
+                );
+            }
+
+            newTab.getImageController().setImage(image);
+            newTab.setText(files.getFileName());
+
+            setupColorGrabber(newTab, toolbar);
+            setupTabClosing(stage, tabPane, newTab);
+
+            tabPane.getTabs().add(newTab);
+            tabPane.getSelectionModel().select(newTab);
+        } catch (Exception e) {
+            ExceptionHandler.printFormattedException(e);
         }
     }
 
@@ -305,5 +320,124 @@ public class Main extends Application {
 
         return alert.showAndWait();
     }
+
+    /**
+     * Applies the shared toolbar settings to the selected image tab.
+     * @param tabPane the pane containing the image tabs
+     * @param toolbar the shared drawing controls
+     */
+    private void applyToolbarSettings(
+        TabPane tabPane,
+        CustomToolBar toolbar
+    ) {
+        if (tabPane.getSelectionModel().getSelectedItem() instanceof ImageTab selectedTab) {
+            var canvas = selectedTab.getImageController().getDrawingCanvas();
+
+            canvas.setLineWidth(toolbar.getLineWidthSlider().getValue());
+            canvas.setLineColor(toolbar.getColorPicker().getValue());
+            canvas.setCurrentTool(toolbar.getToolSelector().getValue());
+            canvas.setDashed(toolbar.getDashedCheckBox().isSelected());
+        }
+    }
+
+    /** 
+     * Connects a tab's canvas to the shared color picker.
+     * @param tab the image tab to configure
+     * @param toolbar the shared drawing controls
+     */
+    private void setupColorGrabber(
+        ImageTab tab,
+        CustomToolBar toolbar
+    ) {
+        var controller = tab.getImageController();
+
+        controller.getDrawingCanvas().addEventHandler(
+            MouseEvent.MOUSE_PRESSED,
+            event -> {
+                if (toolbar.getToolSelector().getValue()
+                        == DrawingTool.COLOR_GRABBER) {
+                    Color sampledColor = controller.readColorAt(
+                        event.getX(),
+                        event.getY()
+                    );
+
+                    if (sampledColor != null) {
+                        toolbar.getColorPicker().setValue(sampledColor);
+                    }
+                }
+            }
+        );
+    }
+
+    /**
+     * Checks whether a tab can close, offering to save changes.
+     * @param stage
+     * @param tab
+     * @return true if can close, false if cancelled or saving fails
+     */
+    private boolean confirmTabClose(Stage stage, ImageTab tab) {
+        var controller = tab.getImageController();
+
+        if (!controller.getDrawingCanvas().isModified()) {
+            return true;
+        }
+
+        Optional<ButtonType> result = showUnsavedChangesAlert();
+
+        if (result.isEmpty()) {
+            return false;
+        }
+
+        ButtonType choice = result.get();
+
+        if (choice == dontSaveButton) {
+            return true;
+        }
+
+        if (choice == saveButton) {
+            try {
+                boolean saved = tab.getFileService().saveImage(
+                    stage,
+                    controller.getModifiedImage()
+                );
+
+                if (saved) {
+                    controller.getDrawingCanvas().setModified(false);
+                    tab.setText(tab.getFileService().getFileName());
+                }
+
+                return saved;
+            } catch (Exception e) {
+                ExceptionHandler.printFormattedException(e);
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Enables tab closing with an unsaved-changes check.
+     *
+     * @param stage the application window
+     * @param tabPane the pane containing the tab
+     * @param tab the image tab to configure
+     */
+    private void setupTabClosing(
+        Stage stage,
+        TabPane tabPane,
+        ImageTab tab
+    ) {
+        tab.setClosable(true);
+
+        tab.setOnCloseRequest(event -> {
+            tabPane.getSelectionModel().select(tab);
+
+            if (!confirmTabClose(stage, tab)) {
+                event.consume();
+            }
+        });
+    }
     
 }
+
