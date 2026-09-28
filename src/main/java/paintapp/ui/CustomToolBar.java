@@ -10,6 +10,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.CheckBox;
 
 import paintapp.classes.DrawingCanvas.DrawingTool;
+import javafx.beans.binding.Bindings;
 
 public class CustomToolBar {
     
@@ -23,6 +24,15 @@ public class CustomToolBar {
     public CustomToolBar() {
 
         colorPicker = new ColorPicker(Color.BLACK);
+        Label colorValueLabel = new Label();
+
+        colorValueLabel.textProperty().bind(
+            Bindings.createStringBinding(
+                () -> toHex(colorPicker.getValue()),
+                colorPicker.valueProperty()
+            )
+        );
+        
         lineWidthSlider = new Slider(
             1, // min
             20, // max
@@ -49,7 +59,23 @@ public class CustomToolBar {
             lineWidthValueLabel,
             colorLabel,
             colorPicker,
+            colorValueLabel,
             dashedCheckBox
+        );
+    }
+
+    /**
+     * Converts a color to its hexadecimal RGB representation.
+     *
+     * @param color the color to describe
+     * @return the color formatted as #RRGGBB
+     */
+    private String toHex(Color color) {
+        return String.format(
+            "#%02X%02X%02X",
+            Math.round(color.getRed() * 255),
+            Math.round(color.getGreen() * 255),
+            Math.round(color.getBlue() * 255)
         );
     }
 
