@@ -32,7 +32,7 @@ public class DrawingCanvas extends CustomCanvas {
 
             lastX = startX;
             lastY = startY;
-            if (currentTool == DrawingTool.LINE || currentTool == DrawingTool.RECTANGLE) {
+            if (currentToolIsShape()) {
                 SnapshotParameters params = new SnapshotParameters();
                 params.setFill(Color.TRANSPARENT);
                 drawingBeforeGesture = snapshot(params, null);
@@ -49,17 +49,17 @@ public class DrawingCanvas extends CustomCanvas {
 
                 lastX = currentX;
                 lastY = currentY;
-            } else if (currentTool == DrawingTool.LINE  || currentTool == DrawingTool.RECTANGLE) {
+            } else if (currentToolIsShape()) {
                 restoreDrawingBeforeGesture();
                 drawShape(event.getX(), event.getY());
             }
         });
 
         this.setOnMouseReleased(event -> {
-            if (currentTool == DrawingTool.LINE || currentTool == DrawingTool.RECTANGLE) {
+            if (currentToolIsShape()) {
                 restoreDrawingBeforeGesture();
                 drawShape(event.getX(), event.getY());
-                
+
                 modified = true;
                 drawingBeforeGesture = null;
             }
@@ -115,7 +115,10 @@ public class DrawingCanvas extends CustomCanvas {
     public enum DrawingTool {
         PENCIL,
         LINE,
-        RECTANGLE
+        RECTANGLE,
+        SQUARE,
+        ELLIPSE,
+        CIRCLE
     }
 
     private DrawingTool currentTool = DrawingTool.PENCIL;
@@ -155,6 +158,48 @@ public class DrawingCanvas extends CustomCanvas {
             double height = Math.abs(endY - startY);
 
             graphics.strokeRect(x, y, width, height);
+        } else if (currentTool == DrawingTool.SQUARE) {
+            double side = Math.min(
+                Math.abs(endX - startX),
+                Math.abs(endY - startY)
+            );
+
+            double x = endX < startX ? startX - side : startX;
+            double y = endY < startY ? startY - side : startY;
+
+            graphics.strokeRect(x, y, side, side);
+        } else if (currentTool == DrawingTool.ELLIPSE) {
+            double x = Math.min(startX, endX);
+            double y = Math.min(startY, endY);
+            double width = Math.abs(endX - startX);
+            double height = Math.abs(endY - startY);
+
+            graphics.strokeOval(x, y, width, height);
+        } else if (currentTool == DrawingTool.CIRCLE) {
+            double diameter = Math.min(
+                Math.abs(endX - startX),
+                Math.abs(endY - startY)
+            );
+
+            double x = endX < startX ? startX - diameter : startX;
+            double y = endY < startY ? startY - diameter : startY;
+
+            graphics.strokeOval(x, y, diameter, diameter);
         }
+    }
+
+    /**
+     * Returns true if the user's current drawing tool is a shape
+     */
+    private boolean currentToolIsShape() {
+        if (currentTool == DrawingTool.LINE
+            || currentTool == DrawingTool.RECTANGLE
+            || currentTool == DrawingTool.SQUARE
+            || currentTool == DrawingTool.ELLIPSE
+            || currentTool == DrawingTool.CIRCLE
+        ) {
+            return true;
+        }
+        return false;
     }
 }

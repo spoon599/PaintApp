@@ -62,7 +62,7 @@ public class FileService {
         }
 
         if (currentFile == null) {
-            return saveImageAs(null, image);
+            return saveImageAs(stage, image);
         }
 
         writeImage(image, currentFile);
