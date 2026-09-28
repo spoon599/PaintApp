@@ -219,8 +219,8 @@ public class DrawingCanvas extends CustomCanvas {
             };
 
             graphics.strokePolygon(xPoints, yPoints, 3);
-            graphics.restore();
         }
+        graphics.restore();
     }
 
     /**
