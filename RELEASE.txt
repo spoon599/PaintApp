@@ -1,24 +1,24 @@
-Nolan's Pain(t) Version 0.2.0 -  09/22/2026
+Nolan's Pain(t) Version 0.3.0 -  09/28/2026
 
 New features:
 
-  * Proper image saving
-  * More Extension Support
-  * Image scrolling for images larger than the application window
-  * Smart save
-  * Drawing with stroke size and color picking
-  * Help and About menu
+  * Blank canvas when no file opened
+  * Shape tools with dashed outlines
+  * Pixel width display
+  * Color grabber tool
+  * Multiple tabs with independent saving
+  * Shortcuts for File changes
 
 Known issues:
 
-  * Resizing can break
+  * 
 
 Expected next sprint:
 
-  * Resizing fixes and additions
+  * 
 
 GitHub Repository:
 https://github.com/spoon599/PaintApp
 
 GitHub Release:
-https://github.com/spoon599/PaintApp/releases/tag/v0.2.0
+https://github.com/spoon599/PaintApp/releases/tag/v0.3.0

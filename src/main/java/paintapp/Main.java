@@ -223,7 +223,7 @@ public class Main extends Application {
             Alert about = new Alert(AlertType.INFORMATION);
             about.setTitle("About");
             about.setHeaderText("Nolan's Pain(t)");
-            about.setContentText("Version 0.2.0");
+            about.setContentText("Version 0.3.0");
             about.showAndWait();
         });
         
