@@ -51,13 +51,22 @@ public class FileService {
 
     /**
      * Saves the given image to the current file if one exists.
-     * @param image
-     * @throws IOException
+     * @param stage the window for the save dialog
+     * @param image the image to save
+     * @return true if saved, false if cancelled or no image available
+     * @throws IOException if image cannot write
      */
-    public void saveImage(Image image) throws IOException {
-        if (currentFile != null && image != null) {
-            writeImage(image, currentFile);
+    public boolean saveImage(Stage stage, Image image) throws IOException {
+        if (image == null) {
+            return false;
         }
+
+        if (currentFile == null) {
+            return saveImageAs(null, image);
+        }
+
+        writeImage(image, currentFile);
+        return true;
     }
 
     /**
@@ -98,8 +107,8 @@ public class FileService {
             }
 
             System.out.println("Saving image to: " + selectedFile.getAbsolutePath());
+            writeImage(image, selectedFile);
             currentFile = selectedFile;
-            writeImage(image, currentFile);
 
             return true;
         }

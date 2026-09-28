@@ -73,14 +73,20 @@ public class Main extends Application {
 
         // Exit
         menu.getExitItem().setOnAction(event -> {
-            attemptExit(imageController, fileService);
+            attemptExit(stage, imageController, fileService);
         });
 
         // Save
         menu.getSaveItem().setOnAction(event -> {
             try {
-                fileService.saveImage(imageController.getModifiedImage()); // save the modified image to the current file
-                imageController.getDrawingCanvas().setModified(false);
+                boolean saved = fileService.saveImage(
+                    stage,
+                    imageController.getModifiedImage()
+                ); // save the modified image to the current file
+
+                if (saved) {
+                    imageController.getDrawingCanvas().setModified(false);
+                }
             } catch (Exception e) {
                 ExceptionHandler.printFormattedException(e);
             }
@@ -176,7 +182,7 @@ public class Main extends Application {
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> {
             event.consume(); // overrides default window closing
-            attemptExit(imageController, fileService);
+            attemptExit(stage, imageController, fileService);
         });
         
         stage.show();
@@ -188,6 +194,7 @@ public class Main extends Application {
     }
 
     private void attemptExit(
+        Stage stage,
         ImageController imageController,
         FileService fileService
     ) {
@@ -200,9 +207,16 @@ public class Main extends Application {
             ButtonType selectedButton = result.get();
             if (selectedButton == saveButton) {
                 try {
-                    fileService.saveImage(imageController.getModifiedImage());
+                    boolean saved = fileService.saveImage(
+                    stage,
+                    imageController.getModifiedImage()
+                );
+
+                if (saved) {
                     imageController.getDrawingCanvas().setModified(false);
                     Platform.exit();
+                }
+                
                 } catch (Exception e) {
                     ExceptionHandler.printFormattedException(e);
                 }
@@ -228,12 +242,15 @@ public class Main extends Application {
             ButtonType selectedButton = result.get();
             if (selectedButton == saveButton) {
                 try {
-                    fileService.saveImage(
+                    boolean saved = fileService.saveImage(
+                        stage,
                         imageController.getModifiedImage()
                     );
-                    imageController
-                        .getDrawingCanvas()
-                        .setModified(false);
+
+                    if (!saved) {
+                        return;
+                    }
+                    imageController.getDrawingCanvas().setModified(false);
                 } catch (Exception e) {
                     ExceptionHandler.printFormattedException(e);
                     return;
