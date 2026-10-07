@@ -27,6 +27,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 
 public class Main extends Application {
 
@@ -67,6 +72,10 @@ public class Main extends Application {
         );
 
         toolbar.getDashedCheckBox().selectedProperty().addListener(
+            (observable, oldValue, newValue) ->
+                applyToolbarSettings(tabPane, toolbar)
+        );
+        toolbar.getPolygonSidesSpinner().valueProperty().addListener(
             (observable, oldValue, newValue) ->
                 applyToolbarSettings(tabPane, toolbar)
         );
@@ -191,7 +200,10 @@ public class Main extends Application {
                     double width = Double.parseDouble(widthField.getText());
                     double height = Double.parseDouble(heightField.getText());
 
-                    if (width > 0 && height > 0) {
+                    if (Double.isFinite(width) && Double.isFinite(height) && width > 0 && height > 0) {
+                        controller.recordBeforeEdit();
+                        controller.clearSelection();
+
                         controller.getDrawingCanvas().resizeDrawing(width, height);
                         controller.getStackPane().setSize(width, height);
                         controller.getDrawingCanvas().setModified(true);
@@ -216,6 +228,112 @@ public class Main extends Application {
                     instanceof ImageTab selectedTab) {
                 selectedTab.getImageController().redo();
             }
+        });
+
+        // Copy
+        menu.getCopyItem().setOnAction(event -> {
+            if (!(tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab)) {
+                return;
+            }
+
+            Image copiedImage = selectedTab.getImageController().copySelection();
+
+            if (copiedImage != null) {
+                ClipboardContent content = new ClipboardContent();
+                content.putImage(copiedImage);
+                Clipboard.getSystemClipboard().setContent(content);
+            }
+        });
+
+        // Paste
+        menu.getPasteItem().setOnAction(event -> {
+            if (!(tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab)) {
+                return;
+            }
+
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+
+            if (clipboard.hasImage()) {
+                selectedTab.getImageController().beginPaste(
+                    clipboard.getImage()
+                );
+            }
+        });
+
+        // Move selection
+        menu.getMoveItem().setOnAction(event -> {
+            if (tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab) {
+                selectedTab.getImageController().beginMove();
+            }
+        });
+
+        // Add text
+        menu.getTextItem().setOnAction(event -> {
+            if (!(tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab)) {
+                return;
+            }
+
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.initOwner(stage);
+            dialog.setTitle("Add Text");
+            dialog.setHeaderText("Enter text and its font size.");
+
+            TextField textField = new TextField();
+            TextField sizeField = new TextField("24");
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+
+            grid.add(new Label("Text:"), 0, 0);
+            grid.add(textField, 1, 0);
+            grid.add(new Label("Font size:"), 0, 1);
+            grid.add(sizeField, 1, 1);
+
+            dialog.getDialogPane().setContent(grid);
+            dialog.getDialogPane().getButtonTypes().addAll(
+                ButtonType.OK,
+                ButtonType.CANCEL
+            );
+
+            Optional<ButtonType> result = dialog.showAndWait();
+
+            if (result.isEmpty() || result.get() != ButtonType.OK
+                    || textField.getText().isBlank()) {
+                return;
+            }
+
+            double fontSize;
+
+            try {
+                fontSize = Double.parseDouble(sizeField.getText());
+
+                if (!Double.isFinite(fontSize)
+                        || fontSize < 1 || fontSize > 512) {
+                    throw new IllegalArgumentException();
+                }
+            } catch (IllegalArgumentException e) {
+                Alert error = new Alert(AlertType.ERROR);
+                error.initOwner(stage);
+                error.setTitle("Invalid Font Size");
+                error.setHeaderText("Enter a font size between 1 and 512.");
+                error.showAndWait();
+                return;
+            }
+
+            Text text = new Text(textField.getText());
+            text.setFont(Font.font(fontSize));
+            text.setFill(toolbar.getColorPicker().getValue());
+
+            SnapshotParameters parameters = new SnapshotParameters();
+            parameters.setFill(Color.TRANSPARENT);
+
+            Image textImage = text.snapshot(parameters, null);
+            selectedTab.getImageController().beginPaste(textImage);
         });
 
         // Clear Canvas
@@ -374,6 +492,7 @@ public class Main extends Application {
             canvas.setLineColor(toolbar.getColorPicker().getValue());
             canvas.setCurrentTool(toolbar.getToolSelector().getValue());
             canvas.setDashed(toolbar.getDashedCheckBox().isSelected());
+            canvas.setPolygonSides(toolbar.getPolygonSidesSpinner().getValue());
         }
     }
 

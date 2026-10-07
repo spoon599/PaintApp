@@ -16,6 +16,7 @@ public class DrawingCanvas extends CustomCanvas {
 
     private boolean modified = false;
     private boolean dashed = false;
+    private int polygonSides = 5;
 
     private Runnable beforeEdit = () -> {};
     private boolean historyRecorded = false;
@@ -75,6 +76,21 @@ public class DrawingCanvas extends CustomCanvas {
             }
         });
 
+    }
+
+    /**
+     * Sets the number of sides used by the regular polygon tool.
+     *
+     * @param sides the number of sides, at least three
+     */
+    public void setPolygonSides(int sides) {
+        if (sides < 3) {
+            throw new IllegalArgumentException(
+                "A polygon must have at least three sides."
+            );
+        }
+
+        polygonSides = sides;
     }
 
     /**
@@ -150,6 +166,9 @@ public class DrawingCanvas extends CustomCanvas {
         CIRCLE,
         TRIANGLE,
         DIAMOND,
+        POLYGON,
+        RIGHT_TRIANGLE,
+        SELECT,
         COLOR_GRABBER
     }
 
@@ -270,6 +289,50 @@ public class DrawingCanvas extends CustomCanvas {
             };
 
             graphics.strokePolygon(xPoints, yPoints, 4);
+        } else if (currentTool == DrawingTool.POLYGON) {
+            double displacementX = endX - startX;
+            double displacementY = endY - startY;
+            
+            double radius = Math.hypot(
+                displacementX,
+                displacementY
+            );
+
+            double startAngle = Math.atan2(
+                displacementY,
+                displacementX
+            );
+
+            double[] xPoints = new double[polygonSides];
+            double[] yPoints = new double[polygonSides];
+
+            for (int i = 0; i < polygonSides; i++) {
+                double angle = startAngle
+                    + i * 2 * Math.PI / polygonSides;
+
+                xPoints[i] = startX + radius * Math.cos(angle);
+                yPoints[i] = startY + radius * Math.sin(angle);
+            }
+
+            graphics.strokePolygon(
+                xPoints,
+                yPoints,
+                polygonSides
+            );
+        } else if (currentTool == DrawingTool.RIGHT_TRIANGLE) {
+            double[] xPoints = {
+                startX,
+                endX,
+                startX
+            };
+
+            double[] yPoints = {
+                startY,
+                endY,
+                endY
+            };
+
+            graphics.strokePolygon(xPoints, yPoints, 3);
         }
         graphics.restore();
     }
@@ -285,9 +348,16 @@ public class DrawingCanvas extends CustomCanvas {
             || currentTool == DrawingTool.CIRCLE
             || currentTool == DrawingTool.TRIANGLE
             || currentTool == DrawingTool.DIAMOND
+            || currentTool == DrawingTool.POLYGON
+            || currentTool == DrawingTool.RIGHT_TRIANGLE
         ) {
             return true;
         }
         return false;
     }
+
+    public DrawingTool getCurrentTool() {
+        return currentTool;
+    }
+
 }

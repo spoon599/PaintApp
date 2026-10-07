@@ -1,21 +1,12 @@
-Nolan's Pain(t) Version 0.3.0 -  09/28/2026
+Nolan's Pain(t) Version 0.4.0 -  10/07/2026
 
 New features:
 
-  * Blank canvas when no file opened
-  * Shape tools with dashed outlines
-  * Pixel width display
-  * Color grabber tool
-  * Multiple tabs with independent saving
-  * Shortcuts for File changes
-
-Known issues:
-
-  * 
-
-Expected next sprint:
-
-  * 
+  * Diamond, Right Triangle, and Polygon shapes added
+  * Undo and Redo button
+  * User-added text
+  * Clear canvas added
+  * Select tool added with copy and pasting
 
 GitHub Repository:
 https://github.com/spoon599/PaintApp

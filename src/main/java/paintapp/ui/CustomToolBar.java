@@ -4,6 +4,7 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Spinner;
 import javafx.scene.paint.Color;
 
 import javafx.scene.control.ComboBox;
@@ -19,8 +20,9 @@ public class CustomToolBar {
     private final ColorPicker colorPicker;
 
     private final ComboBox<DrawingTool> toolSelector;
+    private final Spinner<Integer> polygonSidesSpinner;
     private final CheckBox dashedCheckBox;
-
+    
     public CustomToolBar() {
 
         colorPicker = new ColorPicker(Color.BLACK);
@@ -52,6 +54,9 @@ public class CustomToolBar {
 
         dashedCheckBox = new CheckBox("Dashed outlines");
 
+        polygonSidesSpinner = new Spinner<>(3, Integer.MAX_VALUE, 5);
+        polygonSidesSpinner.setPrefWidth(90);
+
         toolBar = new ToolBar(
             toolSelector,
             lineWidthLabel,
@@ -60,7 +65,9 @@ public class CustomToolBar {
             colorLabel,
             colorPicker,
             colorValueLabel,
-            dashedCheckBox
+            dashedCheckBox,
+            new Label("Sides:"),
+            polygonSidesSpinner
         );
     }
 
@@ -93,6 +100,9 @@ public class CustomToolBar {
     }
     public CheckBox getDashedCheckBox() {
         return dashedCheckBox;
+    }
+    public Spinner<Integer> getPolygonSidesSpinner() {
+        return polygonSidesSpinner;
     }
 
 }

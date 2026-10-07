@@ -26,6 +26,10 @@ public class CustomMenuBar {
     private final MenuItem undoItem;
     private final MenuItem redoItem;
     private final MenuItem clearItem;
+    private final MenuItem copyItem;
+    private final MenuItem pasteItem;
+    private final MenuItem moveItem;
+    private final MenuItem textItem;
 
     public CustomMenuBar() {
 
@@ -81,9 +85,26 @@ public class CustomMenuBar {
         resizeItem = new MenuItem("Resize");
         clearItem = new MenuItem("Clear Canvas");
 
+        copyItem = new MenuItem("Copy");
+        copyItem.setAccelerator(
+            new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN)
+        );
+
+        pasteItem = new MenuItem("Paste");
+        pasteItem.setAccelerator(
+            new KeyCodeCombination(KeyCode.V, KeyCombination.SHORTCUT_DOWN)
+        );
+
+        moveItem = new MenuItem("Move Selection");
+        textItem = new MenuItem("Add Text");
+
         editMenu.getItems().addAll(
             undoItem,
             redoItem,
+            copyItem,
+            pasteItem,
+            moveItem,
+            textItem,
             resizeItem,
             clearItem
         );
@@ -143,6 +164,18 @@ public class CustomMenuBar {
     }
     public MenuItem getClearItem() {
         return clearItem;
+    }
+    public MenuItem getCopyItem() {
+        return copyItem;
+    }
+    public MenuItem getPasteItem() {
+        return pasteItem;
+    }
+    public MenuItem getMoveItem() {
+        return moveItem;
+    }
+    public MenuItem getTextItem() {
+        return textItem;
     }
 
 }
