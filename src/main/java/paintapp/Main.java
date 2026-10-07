@@ -1,7 +1,5 @@
 package paintapp;
 
-import paintapp.controllers.ImageController;
-import paintapp.services.FileService;
 import paintapp.ui.CustomMenuBar;
 import paintapp.ui.CustomToolBar;
 import paintapp.utils.ExceptionHandler;
@@ -201,6 +199,45 @@ public class Main extends Application {
                 } catch (Exception e) {
                     ExceptionHandler.printFormattedException(e);
                 }
+            }
+        });
+
+        // Undo
+        menu.getUndoItem().setOnAction(event -> {
+            if (tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab) {
+                selectedTab.getImageController().undo();
+            }
+        });
+
+        // Redo
+        menu.getRedoItem().setOnAction(event -> {
+            if (tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab) {
+                selectedTab.getImageController().redo();
+            }
+        });
+
+        // Clear Canvas
+        menu.getClearItem().setOnAction(event -> {
+            if (!(tabPane.getSelectionModel().getSelectedItem()
+                    instanceof ImageTab selectedTab)) {
+                return;
+            }
+        
+            Alert confirmation = new Alert(AlertType.CONFIRMATION);
+            confirmation.initOwner(stage);
+            confirmation.setTitle("Clear Canvas");
+            confirmation.setHeaderText("Clear the entire image?");
+            confirmation.setContentText(
+                "This will replace the image and all drawings with white. "
+                + "You can undo this action."
+            );
+        
+            Optional<ButtonType> result = confirmation.showAndWait();
+        
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                selectedTab.getImageController().clearCanvas();
             }
         });
 

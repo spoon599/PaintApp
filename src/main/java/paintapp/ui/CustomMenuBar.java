@@ -12,6 +12,7 @@ public class CustomMenuBar {
 
     private final MenuBar menuBar;
 
+    private final MenuItem newItem;
     private final MenuItem openItem;
     private final MenuItem saveItem;
     private final MenuItem saveAsItem;
@@ -22,7 +23,9 @@ public class CustomMenuBar {
     private final MenuItem helpItem;
     private final MenuItem aboutItem;
 
-    private final MenuItem newItem;
+    private final MenuItem undoItem;
+    private final MenuItem redoItem;
+    private final MenuItem clearItem;
 
     public CustomMenuBar() {
 
@@ -65,8 +68,25 @@ public class CustomMenuBar {
 
         // edit
         Menu editMenu = new Menu("Edit");
+        undoItem = new MenuItem("Undo");
+        undoItem.setAccelerator(
+            new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN)
+        );
+
+        redoItem = new MenuItem("Redo");
+        redoItem.setAccelerator(
+            new KeyCodeCombination(KeyCode.Y, KeyCombination.SHORTCUT_DOWN)
+        );
+
         resizeItem = new MenuItem("Resize");
-        editMenu.getItems().add(resizeItem);
+        clearItem = new MenuItem("Clear Canvas");
+
+        editMenu.getItems().addAll(
+            undoItem,
+            redoItem,
+            resizeItem,
+            clearItem
+        );
 
         // help
         Menu helpMenu = new Menu("Help");
@@ -114,6 +134,15 @@ public class CustomMenuBar {
     }
     public MenuItem getNewItem() {
         return newItem;
+    }
+    public MenuItem getUndoItem() {
+        return undoItem;
+    }
+    public MenuItem getRedoItem() {
+        return redoItem;
+    }
+    public MenuItem getClearItem() {
+        return clearItem;
     }
 
 }

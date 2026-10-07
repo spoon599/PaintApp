@@ -17,6 +17,9 @@ public class DrawingCanvas extends CustomCanvas {
     private boolean modified = false;
     private boolean dashed = false;
 
+    private Runnable beforeEdit = () -> {};
+    private boolean historyRecorded = false;
+
     public DrawingCanvas() {}
 
     /**
@@ -28,6 +31,8 @@ public class DrawingCanvas extends CustomCanvas {
         graphics.setLineWidth(3);
 
         this.setOnMousePressed(event -> {
+            historyRecorded = false;
+            
             startX = event.getX();
             startY = event.getY();
 
@@ -42,6 +47,8 @@ public class DrawingCanvas extends CustomCanvas {
 
         this.setOnMouseDragged(event -> {
             if (currentTool == DrawingTool.PENCIL) {
+                recordGestureHistory();
+
                 double currentX = event.getX();
                 double currentY = event.getY();
 
@@ -51,6 +58,7 @@ public class DrawingCanvas extends CustomCanvas {
                 lastX = currentX;
                 lastY = currentY;
             } else if (currentToolIsShape()) {
+                recordGestureHistory();
                 restoreDrawingBeforeGesture();
                 drawShape(event.getX(), event.getY());
             }
@@ -58,6 +66,7 @@ public class DrawingCanvas extends CustomCanvas {
 
         this.setOnMouseReleased(event -> {
             if (currentToolIsShape()) {
+                recordGestureHistory();
                 restoreDrawingBeforeGesture();
                 drawShape(event.getX(), event.getY());
 
@@ -66,6 +75,25 @@ public class DrawingCanvas extends CustomCanvas {
             }
         });
 
+    }
+
+    /**
+     * Sets the action called before a drawing edit begins.
+     *
+     * @param action the action that records the previous image
+     */
+    public void setBeforeEdit(Runnable action) {
+        beforeEdit = action;
+    }
+
+    /**
+     * Records history once for the current drawing gesture.
+     */
+    private void recordGestureHistory() {
+        if (!historyRecorded) {
+            beforeEdit.run();
+            historyRecorded = true;
+        }
     }
 
     /**
@@ -121,6 +149,7 @@ public class DrawingCanvas extends CustomCanvas {
         ELLIPSE,
         CIRCLE,
         TRIANGLE,
+        DIAMOND,
         COLOR_GRABBER
     }
 
@@ -220,6 +249,27 @@ public class DrawingCanvas extends CustomCanvas {
             };
 
             graphics.strokePolygon(xPoints, yPoints, 3);
+        } else if (currentTool == DrawingTool.DIAMOND) {
+            double x = Math.min(startX, endX);
+            double y = Math.min(startY, endY);
+            double width = Math.abs(endX - startX);
+            double height = Math.abs(endY - startY);
+
+            double[] xPoints = {
+                x + width / 2,
+                x + width,
+                x + width / 2,
+                x
+            };
+
+            double[] yPoints = {
+                y,
+                y + height / 2,
+                y + height,
+                y + height / 2
+            };
+
+            graphics.strokePolygon(xPoints, yPoints, 4);
         }
         graphics.restore();
     }
@@ -234,6 +284,7 @@ public class DrawingCanvas extends CustomCanvas {
             || currentTool == DrawingTool.ELLIPSE
             || currentTool == DrawingTool.CIRCLE
             || currentTool == DrawingTool.TRIANGLE
+            || currentTool == DrawingTool.DIAMOND
         ) {
             return true;
         }

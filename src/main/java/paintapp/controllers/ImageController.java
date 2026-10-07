@@ -1,5 +1,7 @@
 package paintapp.controllers;
 
+import java.util.Stack;
+
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -16,6 +18,9 @@ public class ImageController {
     private final CustomStackPane stackPane; // snapshot container (image + drawing sheet)
     private final CustomStackPane workspace; // global allignment pane
     private final CustomScrollPane scrollPane; // scroll movement, top of chain
+
+    private final Stack<Image> undoStack = new Stack<>();
+    private final Stack<Image> redoStack = new Stack<>();
     
     /**
      * Creates a new ImageController with a default ImageView.
@@ -25,6 +30,7 @@ public class ImageController {
         imageView.setPreserveRatio(true); // preserve image's aspect ratio when setting a new image
 
         drawingCanvas = new DrawingCanvas();
+        drawingCanvas.setBeforeEdit(this::recordBeforeEdit);
 
         CustomStackPane.setAlignment(imageView, Pos.TOP_LEFT);
         CustomStackPane.setAlignment(drawingCanvas, Pos.TOP_LEFT);
@@ -64,6 +70,54 @@ public class ImageController {
     }
     public DrawingCanvas getDrawingCanvas() {
         return drawingCanvas;
+    }
+
+    /**
+     * Replaces the complete image with white while preserving its dimensions.
+     * The previous image is retained for undo.
+     */
+    public void clearCanvas() {
+        int width = (int) drawingCanvas.getWidth();
+        int height = (int) drawingCanvas.getHeight();
+    
+        recordBeforeEdit();
+        createBlankImage(width, height);
+        drawingCanvas.setModified(true);
+    }
+
+    /**
+     * Records the complete image before an edit begins.
+     * Starting a new edit discards the previous redo history.
+     */
+    public void recordBeforeEdit() {
+        undoStack.push(getModifiedImage());
+        redoStack.clear();
+    }
+
+    /**
+     * Restores the image before the most recent edit.
+     */
+    public void undo() {
+        if (undoStack.empty()) {
+            return;
+        }
+
+        redoStack.push(getModifiedImage());
+        setImage(undoStack.pop());
+        drawingCanvas.setModified(true);
+    }
+
+    /**
+     * Restores the most recently undone edit.
+     */
+    public void redo() {
+        if (redoStack.empty()) {
+            return;
+        }
+
+        undoStack.push(getModifiedImage());
+        setImage(redoStack.pop());
+        drawingCanvas.setModified(true);
     }
     
     /**
