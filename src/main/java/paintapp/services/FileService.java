@@ -2,19 +2,28 @@ package paintapp.services;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
-import java.awt.image.RenderedImage;
+import java.awt.image.BufferedImage;
+import java.awt.Graphics2D;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+
 public class FileService {
     
     private File currentFile;
+    private final String autosaveId = UUID.randomUUID().toString();
 
     /**
      * Opens an image file using a FileChooser and returns the selected image.
@@ -100,20 +109,63 @@ public class FileService {
 
         File selectedFile = fileChooser.showSaveDialog(stage);
 
-        // If no extension was given, default to .png
-        if (selectedFile != null) {
-            if (getExtension(selectedFile) == null) {
-                selectedFile = new File(selectedFile.getAbsolutePath() + ".png");
-            }
-
-            System.out.println("Saving image to: " + selectedFile.getAbsolutePath());
-            writeImage(image, selectedFile);
-            currentFile = selectedFile;
-
-            return true;
+        if (selectedFile == null) {
+            return false;
         }
 
-        return false;
+        String extension = getExtension(selectedFile);
+
+        if (extension == null) {
+            String pattern = fileChooser.getSelectedExtensionFilter()
+                .getExtensions().get(0);
+        
+            extension = pattern.substring(2);
+        
+            selectedFile = new File(
+                selectedFile.getAbsolutePath() + "." + extension
+            );
+        }
+
+        if (!(extension.equals("png")
+                || extension.equals("jpg")
+                || extension.equals("jpeg")
+                || extension.equals("bmp"))) {
+            throw new IOException("Choose PNG, JPG, JPEG, or BMP.");
+        }
+
+        String warningText = """
+            Saving an image may discard metadata and editable drawing information.
+            Shapes and text are stored as pixels.
+        
+            JPG/JPEG also uses lossy compression, which can reduce image quality.
+            JPG/JPEG and BMP replace transparent areas with white.
+            """;
+
+        if (selectedFile.exists()) {
+            warningText += "\nThe existing destination file will be replaced.";
+        }
+
+        Alert warning = new Alert(
+            Alert.AlertType.CONFIRMATION,
+            warningText,
+            ButtonType.OK,
+            ButtonType.CANCEL
+        );
+
+        warning.initOwner(stage);
+        warning.setTitle("Possible Image Data Loss");
+        warning.setHeaderText(
+            "Save as " + extension.toUpperCase() + "?"
+        );
+
+        if (warning.showAndWait().orElse(ButtonType.CANCEL)
+                != ButtonType.OK) {
+            return false;
+        }
+
+        writeImage(image, selectedFile);
+        currentFile = selectedFile;
+        return true;
     }
 
     /**
@@ -137,15 +189,74 @@ public class FileService {
      * @throws IOException
      */
     private void writeImage(Image image, File file) throws IOException {
-        String extension = getExtension(file); // get the file's extension as a string
-        RenderedImage render = SwingFXUtils.fromFXImage(image, null); // get rendered image from fx image
+        String extension = getExtension(file);
 
-        boolean success = ImageIO.write(render, extension, file); // write to file
+        if (extension == null
+                || !(extension.equals("png")
+                || extension.equals("jpg")
+                || extension.equals("jpeg")
+                || extension.equals("bmp"))) {
+            throw new IOException("Choose PNG, JPG, JPEG, or BMP.");
+        }
+
+        BufferedImage rendered = SwingFXUtils.fromFXImage(image, null);
+
+        if (!extension.equals("png")) {
+            BufferedImage rgbImage = new BufferedImage(
+                rendered.getWidth(),
+                rendered.getHeight(),
+                BufferedImage.TYPE_INT_RGB
+            );
+
+            Graphics2D graphics = rgbImage.createGraphics();
+
+            try {
+                graphics.setColor(java.awt.Color.WHITE);
+                graphics.fillRect(
+                0, 0,
+                    rgbImage.getWidth(),
+                    rgbImage.getHeight()
+                );
+
+                graphics.drawImage(rendered, 0, 0, null);
+            } finally {
+                graphics.dispose();
+            }
+
+            rendered = rgbImage;
+        }
+
+        boolean success = ImageIO.write(rendered, extension, file);
+
         if (!success) {
             throw new IOException(
-                "Could not write image to file: " + extension
+                "Could not write image format: " + extension
             );
         }
+    }
+
+    /**
+     * Saves the current image to the backups folder.
+     * @param image
+     * @throws IOException
+     */
+    public void saveBackup(Image image) throws IOException {
+        if (image == null) {
+            return;
+        }
+
+        Path directory = Path.of(
+            System.getProperty("user.home"),
+            "PaintApp-autosaves"
+        );
+
+        Files.createDirectories(directory);
+
+        File backupFile = directory.resolve(
+            autosaveId + ".png"
+        ).toFile();
+
+        writeImage(image, backupFile);
     }
 
     /**

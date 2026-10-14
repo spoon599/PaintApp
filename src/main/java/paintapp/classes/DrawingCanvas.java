@@ -5,6 +5,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
+import paintapp.utils.StarGeometry;
+
 public class DrawingCanvas extends CustomCanvas {
 
     private WritableImage drawingBeforeGesture;
@@ -17,6 +19,7 @@ public class DrawingCanvas extends CustomCanvas {
     private boolean modified = false;
     private boolean dashed = false;
     private int polygonSides = 5;
+    private int starPoints = 5;
 
     private Runnable beforeEdit = () -> {};
     private boolean historyRecorded = false;
@@ -167,6 +170,7 @@ public class DrawingCanvas extends CustomCanvas {
         TRIANGLE,
         DIAMOND,
         POLYGON,
+        STAR,
         RIGHT_TRIANGLE,
         SELECT,
         COLOR_GRABBER
@@ -333,6 +337,26 @@ public class DrawingCanvas extends CustomCanvas {
             };
 
             graphics.strokePolygon(xPoints, yPoints, 3);
+        } else if (currentTool == DrawingTool.STAR) {
+            double displacementX = endX - startX;
+            double displacementY = endY - startY;
+
+            double radius = Math.hypot(displacementX, displacementY);
+            double startAngle = Math.atan2(displacementY, displacementX);
+
+            double[][] vertices = StarGeometry.createVertices(
+                startX,
+                startY,
+                radius,
+                startAngle,
+                starPoints
+            );
+
+            graphics.strokePolygon(
+                vertices[0],
+                vertices[1],
+                vertices[0].length
+            );
         }
         graphics.restore();
     }
@@ -350,10 +374,21 @@ public class DrawingCanvas extends CustomCanvas {
             || currentTool == DrawingTool.DIAMOND
             || currentTool == DrawingTool.POLYGON
             || currentTool == DrawingTool.RIGHT_TRIANGLE
+            || currentTool == DrawingTool.STAR
         ) {
             return true;
         }
         return false;
+    }
+
+    public void setStarPoints(int points) {
+        if (points < 4) {
+            throw new IllegalArgumentException(
+                "A star must have at least four points."
+            );
+        }
+
+        starPoints = points;
     }
 
     public DrawingTool getCurrentTool() {

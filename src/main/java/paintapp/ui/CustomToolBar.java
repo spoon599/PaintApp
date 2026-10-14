@@ -21,7 +21,11 @@ public class CustomToolBar {
 
     private final ComboBox<DrawingTool> toolSelector;
     private final Spinner<Integer> polygonSidesSpinner;
+    private final Spinner<Integer> starPointsSpinner;
     private final CheckBox dashedCheckBox;
+
+    private final CheckBox showAutosaveCheckBox;
+    private final Label autosaveCountdownLabel;
     
     public CustomToolBar() {
 
@@ -57,6 +61,20 @@ public class CustomToolBar {
         polygonSidesSpinner = new Spinner<>(3, Integer.MAX_VALUE, 5);
         polygonSidesSpinner.setPrefWidth(90);
 
+        starPointsSpinner = new Spinner<>(4, 100, 5);
+        starPointsSpinner.setPrefWidth(90);
+
+        showAutosaveCheckBox = new CheckBox("Show autosave countdown");
+        showAutosaveCheckBox.setSelected(true);
+
+        autosaveCountdownLabel = new Label("Autosave in: 60 s");
+        autosaveCountdownLabel.visibleProperty().bind(
+            showAutosaveCheckBox.selectedProperty()
+        );
+        autosaveCountdownLabel.managedProperty().bind(
+            showAutosaveCheckBox.selectedProperty()
+        );
+
         toolBar = new ToolBar(
             toolSelector,
             lineWidthLabel,
@@ -67,7 +85,11 @@ public class CustomToolBar {
             colorValueLabel,
             dashedCheckBox,
             new Label("Sides:"),
-            polygonSidesSpinner
+            polygonSidesSpinner,
+            new Label("Star points:"),
+            starPointsSpinner,
+            showAutosaveCheckBox,
+            autosaveCountdownLabel
         );
     }
 
@@ -103,6 +125,12 @@ public class CustomToolBar {
     }
     public Spinner<Integer> getPolygonSidesSpinner() {
         return polygonSidesSpinner;
+    }
+    public Spinner<Integer> getStarPointsSpinner() {
+        return starPointsSpinner;
+    }
+    public Label getAutosaveCountdownLabel() {
+        return autosaveCountdownLabel;
     }
 
 }

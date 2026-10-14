@@ -4,10 +4,15 @@ import javafx.scene.control.Tab;
 import paintapp.controllers.ImageController;
 import paintapp.services.FileService;
 
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ContextMenu;
+
 public class ImageTab extends Tab {
 
     private final ImageController imageController;
     private final FileService fileService;
+
+    private final CheckMenuItem shareOnWebItem;
 
     /**
      * Creates a new image tab.
@@ -19,6 +24,10 @@ public class ImageTab extends Tab {
         imageController = new ImageController();
         fileService = new FileService();
 
+        shareOnWebItem = new CheckMenuItem("Show on webserver");
+        ContextMenu tabMenu = new ContextMenu(shareOnWebItem);
+        setContextMenu(tabMenu);
+
         setContent(imageController.getScrollPane());
         setClosable(false);
     }
@@ -28,6 +37,9 @@ public class ImageTab extends Tab {
     }
     public FileService getFileService() {
         return fileService;
+    }
+    public boolean isSharedOnWeb() {
+        return shareOnWebItem.isSelected();
     }
 
 }

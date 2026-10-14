@@ -36,6 +36,13 @@
             <artifactId>javafx-swing</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>6.0.2</version>
+            <scope>test</scope>
+        </dependency>
         
     </dependencies>
 
@@ -57,6 +64,12 @@
                 <configuration>
                     <mainClass>paintapp.Main</mainClass>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.6.0</version>
             </plugin>
         </plugins>
     </build>

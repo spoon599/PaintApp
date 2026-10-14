@@ -32,12 +32,25 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
+
+import paintapp.services.WebServer;
+import java.util.ArrayList;
 
 public class Main extends Application {
 
     private final ButtonType saveButton = new ButtonType("Save");
     private final ButtonType dontSaveButton = new ButtonType("Don't Save");
     private final ButtonType cancelButton = new ButtonType("Cancel");
+
+    private static final int AUTOSAVE_INTERVAL_SECONDS = 60;
+    private int autosaveSecondsRemaining = AUTOSAVE_INTERVAL_SECONDS;
+    private Timeline autosaveTimer;
+
+    private WebServer webServer;
+    private Timeline webRefreshTimer;
 
     @Override
     public void start(Stage stage) {
@@ -82,6 +95,11 @@ public class Main extends Application {
 
         tabPane.getSelectionModel().selectedItemProperty().addListener(
             (observable, oldTab, newTab) ->
+                applyToolbarSettings(tabPane, toolbar)
+        );
+
+        toolbar.getStarPointsSpinner().valueProperty().addListener(
+            (observable, oldValue, newValue) ->
                 applyToolbarSettings(tabPane, toolbar)
         );
 
@@ -130,7 +148,13 @@ public class Main extends Application {
                     if (saved) {
                         controller.getDrawingCanvas().setModified(false);
                         selectedTab.setText(files.getFileName());
-            }
+
+                        // update autosave timer
+                        autosaveSecondsRemaining = AUTOSAVE_INTERVAL_SECONDS;
+                        toolbar.getAutosaveCountdownLabel().setText(
+                            "Autosave in: " + autosaveSecondsRemaining + " s"
+                        );
+                    }
                 } catch (Exception e) {
                     ExceptionHandler.printFormattedException(e);
                 }
@@ -153,6 +177,12 @@ public class Main extends Application {
                     if (saved) {
                         controller.getDrawingCanvas().setModified(false);
                         selectedTab.setText(files.getFileName());
+
+                        // update autosave timer
+                        autosaveSecondsRemaining = AUTOSAVE_INTERVAL_SECONDS;
+                        toolbar.getAutosaveCountdownLabel().setText(
+                            "Autosave in: " + autosaveSecondsRemaining + " s"
+                        );
                     }
                 } catch (Exception e) {
                     ExceptionHandler.printFormattedException(e);
@@ -383,7 +413,7 @@ public class Main extends Application {
         });
         
         // create the scene and set it on the stage
-        Scene scene = new Scene(root, 900, 600); // parent to root and set dimensions to 900x600
+        Scene scene = new Scene(root, 1280, 1080); // parent to root and set dimensions to 900x600
         stage.setTitle("Nolan's Pain(t)");
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> {
@@ -392,7 +422,8 @@ public class Main extends Application {
         });
         
         stage.show();
-        
+        setupAutosave(tabPane, toolbar);
+        setupWebServer(tabPane);
     }
 
     public static void main(String[] args) {
@@ -493,6 +524,7 @@ public class Main extends Application {
             canvas.setCurrentTool(toolbar.getToolSelector().getValue());
             canvas.setDashed(toolbar.getDashedCheckBox().isSelected());
             canvas.setPolygonSides(toolbar.getPolygonSidesSpinner().getValue());
+            canvas.setStarPoints(toolbar.getStarPointsSpinner().getValue());
         }
     }
 
@@ -593,6 +625,119 @@ public class Main extends Application {
                 event.consume();
             }
         });
+    }
+
+    /**
+     * Sets up the autosave timer for FileService's save backup method
+     * @param tabPane
+     * @param toolbar
+     */
+    private void setupAutosave(TabPane tabPane, CustomToolBar toolbar) {
+        autosaveTimer = new Timeline(
+            new KeyFrame(Duration.seconds(1), event -> {
+                autosaveSecondsRemaining--;
+
+                if (autosaveSecondsRemaining <= 0) {
+                    boolean allSaved = true;
+
+                    for (var tab : tabPane.getTabs()) {
+                        if (tab instanceof ImageTab imageTab) {
+                            try {
+                                imageTab.getFileService().saveBackup(
+                                    imageTab.getImageController()
+                                        .getModifiedImage()
+                                );
+                            } catch (Exception e) {
+                                allSaved = false;
+                                ExceptionHandler.printFormattedException(e);
+                            }
+                        }
+                    }
+
+                    autosaveSecondsRemaining = AUTOSAVE_INTERVAL_SECONDS;
+
+                    toolbar.getAutosaveCountdownLabel().setText(
+                        allSaved
+                            ? "Backups saved. Next: "
+                                + autosaveSecondsRemaining + " s"
+                            : "Autosave failed. Retry in: "
+                                + autosaveSecondsRemaining + " s"
+                    );
+                } else {
+                    toolbar.getAutosaveCountdownLabel().setText(
+                        "Autosave in: " + autosaveSecondsRemaining + " s"
+                    );
+                }
+            })
+        );
+
+        autosaveTimer.setCycleCount(Timeline.INDEFINITE);
+        autosaveTimer.play();
+    }
+
+    /**
+     * Stops the autosave timer (called automatically by javafx)
+     * Stops any active webserver
+     */
+    @Override
+    public void stop() {
+        if (autosaveTimer != null) {
+            autosaveTimer.stop();
+        }
+
+        if (webRefreshTimer != null) {
+            webRefreshTimer.stop();
+        }
+
+        if (webServer != null) {
+            webServer.stop();
+        }
+    }
+
+    /**
+     * Sets up a web server
+     * @param tabPane
+     */
+    private void setupWebServer(TabPane tabPane) {
+        webServer = new WebServer();
+
+        try {
+            webServer.start();
+        } catch (Exception e) {
+            ExceptionHandler.printFormattedException(e);
+
+            Alert error = new Alert(AlertType.ERROR);
+            error.setTitle("Webserver Error");
+            error.setHeaderText("Could not start the gallery server.");
+            error.setContentText("Port 8000 might be being used by another application.");
+            error.showAndWait();
+            return;
+        }
+
+        webRefreshTimer = new Timeline(
+            new KeyFrame(Duration.seconds(3), event -> {
+                ArrayList<Image> sharedImages = new ArrayList<>();
+
+                try {
+                    for (var tab : tabPane.getTabs()) {
+                        if (tab instanceof ImageTab imageTab
+                                && imageTab.isSharedOnWeb()) {
+                            sharedImages.add(
+                                imageTab.getImageController()
+                                    .getModifiedImage()
+                            );
+                        }
+                    }
+
+                    webServer.updateImages(sharedImages);
+                } catch (Exception e) {
+                    ExceptionHandler.printFormattedException(e);
+                }
+            })
+        );
+
+        webRefreshTimer.setCycleCount(Timeline.INDEFINITE);
+        webRefreshTimer.play();
     }
     
 }
