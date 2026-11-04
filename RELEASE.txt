@@ -1,15 +1,15 @@
-Nolan's Pain(t) Version 0.4.0 -  10/07/2026
+Nolan's Pain(t) Version 0.5.0 -  10/13/2026
 
 New features:
 
-  * Diamond, Right Triangle, and Polygon shapes added
-  * Undo and Redo button
-  * User-added text
-  * Clear canvas added
-  * Select tool added with copy and pasting
+  * Added unit testing
+  * Variable-point star shape added
+  * Auto-save + auto-save timer
+  * Webserver gallery
+  * Alternative file saving
 
 GitHub Repository:
 https://github.com/spoon599/PaintApp
 
 GitHub Release:
-https://github.com/spoon599/PaintApp/releases/tag/v0.3.0
+https://github.com/spoon599/PaintApp/releases/tag/v0.5.0

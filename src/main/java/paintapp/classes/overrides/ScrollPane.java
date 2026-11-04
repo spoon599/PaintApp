@@ -1,12 +1,11 @@
-package paintapp.classes;
+package paintapp.classes.overrides;
 
 import javafx.scene.Node;
-import javafx.scene.control.ScrollPane;
 
-public class CustomScrollPane extends ScrollPane {
+public class ScrollPane extends javafx.scene.control.ScrollPane {
     
-    public CustomScrollPane() {}
-    public CustomScrollPane(Node content) {
+    public ScrollPane() {}
+    public ScrollPane(Node content) {
         super(content);
     }
 

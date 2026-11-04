@@ -1,11 +1,10 @@
-package paintapp.classes;
+package paintapp.classes.overrides;
 
-import javafx.scene.canvas.Canvas;
 import javafx.scene.image.Image;
 
-public class CustomCanvas extends Canvas {
+public class Canvas extends javafx.scene.canvas.Canvas {
 
-    public CustomCanvas() {}
+    public Canvas() {}
 
     /**
      * Sets the size of the canvas to the given dimensions.

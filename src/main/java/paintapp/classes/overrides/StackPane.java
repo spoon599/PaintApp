@@ -1,13 +1,12 @@
-package paintapp.classes;
+package paintapp.classes.overrides;
 
-import javafx.scene.layout.StackPane;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 
-public class CustomStackPane extends StackPane {
+public class StackPane extends javafx.scene.layout.StackPane {
 
-    public CustomStackPane() {}
-    public CustomStackPane(Node... content) {
+    public StackPane() {}
+    public StackPane(Node... content) {
        super(content);
     }
 

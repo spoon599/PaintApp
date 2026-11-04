@@ -4,10 +4,10 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-
+import paintapp.classes.overrides.Canvas;
 import paintapp.utils.StarGeometry;
 
-public class DrawingCanvas extends CustomCanvas {
+public class DrawingCanvas extends Canvas {
 
     private WritableImage drawingBeforeGesture;
 

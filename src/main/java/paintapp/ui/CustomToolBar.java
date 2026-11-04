@@ -4,7 +4,10 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToolBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.paint.Color;
 
 import javafx.scene.control.ComboBox;
@@ -26,6 +29,9 @@ public class CustomToolBar {
 
     private final CheckBox showAutosaveCheckBox;
     private final Label autosaveCountdownLabel;
+    
+    private final CheckBox autosaveEnabledCheckBox;
+    private final CheckBox notificationsEnabledCheckBox;
     
     public CustomToolBar() {
 
@@ -75,6 +81,24 @@ public class CustomToolBar {
             showAutosaveCheckBox.selectedProperty()
         );
 
+        autosaveEnabledCheckBox = new CheckBox("Autosave enabled");
+        autosaveEnabledCheckBox.setSelected(true); // default to autosave enabled
+
+        notificationsEnabledCheckBox = new CheckBox("Autosave notifications");
+        notificationsEnabledCheckBox.setSelected(true); // default to notifications enabled
+        
+        autosaveEnabledCheckBox.setTooltip(
+            new javafx.scene.control.Tooltip(
+                "Save backup copies automatically"
+            )
+        );
+
+        notificationsEnabledCheckBox.setTooltip(
+            new javafx.scene.control.Tooltip(
+                "Show desktop notifications for autosave"
+            )
+        );
+
         toolBar = new ToolBar(
             toolSelector,
             lineWidthLabel,
@@ -89,8 +113,42 @@ public class CustomToolBar {
             new Label("Star points:"),
             starPointsSpinner,
             showAutosaveCheckBox,
-            autosaveCountdownLabel
+            autosaveCountdownLabel,
+            autosaveEnabledCheckBox,
+            notificationsEnabledCheckBox
         );
+
+        // tooltips setup
+        toolSelector.setTooltip(
+            new Tooltip("Choose a drawing tool")
+        );
+
+        lineWidthSlider.setTooltip(
+            new Tooltip("Change the drawing line width")
+        );
+
+        colorPicker.setTooltip(
+            new Tooltip("Choose a drawing color")
+        );
+
+        dashedCheckBox.setTooltip(
+            new Tooltip("Use dashed outlines for shapes")
+        );
+
+        polygonSidesSpinner.setTooltip(
+            new Tooltip("Choose the number of polygon sides")
+        );
+
+        starPointsSpinner.setTooltip(
+            new Tooltip("Choose the number of star points")
+        );
+
+        showAutosaveCheckBox.setTooltip(
+            new Tooltip("Show or hide the autosave countdown")
+        );
+
+        addToolButtons();
+
     }
 
     /**
@@ -106,6 +164,60 @@ public class CustomToolBar {
             Math.round(color.getGreen() * 255),
             Math.round(color.getBlue() * 255)
         );
+    }
+
+    /**
+     * Adds a button for each drawing tool to the toolbar.
+     */
+    private void addToolButtons() {
+        ToggleGroup group = new ToggleGroup();
+    
+        for (DrawingTool tool : DrawingTool.values()) {
+            String icon = switch (tool) {
+                case PENCIL -> "✎";
+                case LINE -> "╱";
+                case RECTANGLE -> "▭";
+                case SQUARE -> "□";
+                case ELLIPSE -> "⬭";
+                case CIRCLE -> "○";
+                case TRIANGLE -> "△";
+                case DIAMOND -> "◇";
+                case POLYGON -> "⬠";
+                case STAR -> "☆";
+                case RIGHT_TRIANGLE -> "◿";
+                case SELECT -> "⬚";
+                case COLOR_GRABBER -> "⚗";
+            };
+        
+            ToggleButton button = new ToggleButton(icon);
+            button.setToggleGroup(group);
+            button.setMinWidth(32);
+        
+            // show the tool name on hover
+            String name = tool.toString().replace('_', ' ');
+            button.setTooltip(new Tooltip(name));
+            button.setAccessibleText(name);
+        
+            // show which tool is currently selected
+            button.setSelected(tool == toolSelector.getValue());
+        
+            // change tools when the button is clicked
+            button.setOnAction(event -> {
+                toolSelector.setValue(tool);
+            
+                // keep the active tool button selected
+                button.setSelected(true);
+            });
+        
+            // update the buttons when the dropdown changes
+            toolSelector.valueProperty().addListener(
+                (observable, oldValue, newValue) ->
+                    button.setSelected(tool == newValue)
+            );
+        
+            // put tool buttons at the start of the toolbar
+            toolBar.getItems().add(tool.ordinal(), button);
+        }
     }
 
     public ToolBar getToolBar() {
@@ -131,6 +243,12 @@ public class CustomToolBar {
     }
     public Label getAutosaveCountdownLabel() {
         return autosaveCountdownLabel;
+    }
+    public CheckBox getAutosaveEnabledCheckBox() {
+        return autosaveEnabledCheckBox;
+    }
+    public CheckBox getNotificationsEnabledCheckBox() {
+        return notificationsEnabledCheckBox;
     }
 
 }

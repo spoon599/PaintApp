@@ -10,21 +10,22 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.input.MouseEvent;
-
-import paintapp.classes.CustomScrollPane;
-import paintapp.classes.CustomStackPane;
 import paintapp.classes.DrawingCanvas;
-import paintapp.classes.CustomCanvas;
 import paintapp.classes.DrawingCanvas.DrawingTool;
+import paintapp.classes.overrides.Canvas;
+import paintapp.classes.overrides.StackPane;
+import paintapp.classes.overrides.ScrollPane;
+
+import paintapp.utils.ImageTransform;
 
 public class ImageController {
 
     private final ImageView imageView;
-    private final CustomCanvas selectionCanvas;
+    private final Canvas selectionCanvas;
     private final DrawingCanvas drawingCanvas; // drawing sheet
-    private final CustomStackPane stackPane; // snapshot container (image + drawing sheet)
-    private final CustomStackPane workspace; // global allignment pane
-    private final CustomScrollPane scrollPane; // scroll movement, top of chain
+    private final StackPane stackPane; // snapshot container (image + drawing sheet)
+    private final StackPane workspace; // global allignment pane
+    private final ScrollPane scrollPane; // scroll movement, top of chain
 
     private final Stack<Image> undoStack = new Stack<>();
     private final Stack<Image> redoStack = new Stack<>();
@@ -45,17 +46,17 @@ public class ImageController {
         drawingCanvas = new DrawingCanvas();
         drawingCanvas.setBeforeEdit(this::recordBeforeEdit);
 
-        selectionCanvas = new CustomCanvas();
+        selectionCanvas = new Canvas();
         selectionCanvas.setMouseTransparent(true);
         selectionCanvas.widthProperty().bind(drawingCanvas.widthProperty());
         selectionCanvas.heightProperty().bind(drawingCanvas.heightProperty());
 
-        CustomStackPane.setAlignment(selectionCanvas, Pos.TOP_LEFT);
-        CustomStackPane.setAlignment(imageView, Pos.TOP_LEFT);
-        CustomStackPane.setAlignment(drawingCanvas, Pos.TOP_LEFT);
+        StackPane.setAlignment(selectionCanvas, Pos.TOP_LEFT);
+        StackPane.setAlignment(imageView, Pos.TOP_LEFT);
+        StackPane.setAlignment(drawingCanvas, Pos.TOP_LEFT);
         
         // actual image stack
-        stackPane = new CustomStackPane();
+        stackPane = new StackPane();
         stackPane.getChildren().addAll(
             imageView, // add this first as our bottom layer
             drawingCanvas, // invisible top layer for drawing
@@ -63,10 +64,10 @@ public class ImageController {
         );
 
         // used to center the stackPane
-        workspace = new CustomStackPane(stackPane); // workspace -> stackPane -> imageView & canvas
+        workspace = new StackPane(stackPane); // workspace -> stackPane -> imageView & canvas
 
         // setup scrolling
-        scrollPane = new CustomScrollPane(workspace);
+        scrollPane = new ScrollPane(workspace);
         scrollPane.setFitToDimensions(true);
 
         drawingCanvas.setupDrawing();
@@ -81,13 +82,13 @@ public class ImageController {
     public ImageView getImageView() {
         return imageView;
     }
-    public CustomStackPane getStackPane() {
+    public StackPane getStackPane() {
         return stackPane;
     }
-    public CustomStackPane getWorkspace() {
+    public StackPane getWorkspace() {
         return workspace;
     }
-    public CustomScrollPane getScrollPane() {
+    public ScrollPane getScrollPane() {
         return scrollPane;
     }
     public DrawingCanvas getDrawingCanvas() {
@@ -449,6 +450,86 @@ public class ImageController {
             (int) x,
             (int) y
         );
+    }
+
+    // rotate or flip the whole canvas or just the selection
+    public boolean transform(
+        ImageTransform.Transform operation,
+        boolean selectionOnly
+    ) {
+        Image source = selectionOnly
+            ? copySelection()
+            : getModifiedImage();
+    
+        // stop if there isn't a selection
+        if (source == null) {
+            return false;
+        }
+    
+        // keep the selection at its current position
+        int x = selectionOnly
+            ? (int) Math.floor(selection.getMinX())
+            : 0;
+    
+        int y = selectionOnly
+            ? (int) Math.floor(selection.getMinY())
+            : 0;
+    
+        Image result = ImageTransform.apply(source, operation);
+    
+        // save the current image for undo
+        recordBeforeEdit();
+    
+        if (!selectionOnly) {
+            // replace the whole canvas with the changed image
+            setImage(result);
+        } else {
+            Image original = getModifiedImage();
+        
+            // expand the canvas if the rotated selection needs more room
+            int width = Math.max(
+                (int) original.getWidth(),
+                x + (int) result.getWidth()
+            );
+        
+            int height = Math.max(
+                (int) original.getHeight(),
+                y + (int) result.getHeight()
+            );
+        
+            createBlankImage(width, height);
+        
+            var graphics = drawingCanvas.getGraphicsContext2D();
+            graphics.save();
+        
+            // put the original image back
+            graphics.drawImage(original, 0, 0);
+        
+            // cover the old selection with white
+            graphics.setFill(Color.WHITE);
+            graphics.fillRect(
+                x,
+                y,
+                source.getWidth(),
+                source.getHeight()
+            );
+        
+            // draw the changed selection
+            graphics.drawImage(result, x, y);
+            graphics.restore();
+        
+            // move the selection outline around the changed area
+            selectionStartX = x;
+            selectionStartY = y;
+            updateSelection(
+                x + result.getWidth(),
+                y + result.getHeight()
+            );
+        }
+    
+        // the image now has unsaved changes
+        drawingCanvas.setModified(true);
+        return true;
     }
     
 }

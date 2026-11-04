@@ -3,6 +3,7 @@ package paintapp;
 import paintapp.ui.CustomMenuBar;
 import paintapp.ui.CustomToolBar;
 import paintapp.utils.ExceptionHandler;
+import paintapp.utils.ImageTransform;
 import paintapp.classes.DrawingCanvas.DrawingTool;
 import paintapp.classes.ImageTab;
 
@@ -10,7 +11,7 @@ import java.util.Optional;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-
+import javafx.event.ActionEvent;
 import javafx.stage.Stage;
 
 import javafx.scene.Scene;
@@ -19,6 +20,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
@@ -35,8 +38,11 @@ import javafx.scene.text.Text;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
-
+import paintapp.services.ActivityLogger;
+import paintapp.services.Desktop;
 import paintapp.services.WebServer;
+
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class Main extends Application {
@@ -51,9 +57,20 @@ public class Main extends Application {
 
     private WebServer webServer;
     private Timeline webRefreshTimer;
+    private final ActivityLogger activityLogger = new ActivityLogger(
+        Path.of(
+            System.getProperty("user.home"),
+            "PaintApp-logs",
+            "activity.log"
+        )
+    );
+
+    private final Desktop desktop = new Desktop();
 
     @Override
     public void start(Stage stage) {
+
+        activityLogger.log("PaintApp", "App opened");
 
         // main controllers and services
         BorderPane root = new BorderPane();
@@ -69,6 +86,45 @@ public class Main extends Application {
             toolbar.getToolBar()
         );
 
+        // turn autosave on or off
+        toolbar.getAutosaveEnabledCheckBox().setOnAction(event -> {
+            boolean enabled =
+                toolbar.getAutosaveEnabledCheckBox().isSelected();
+        
+            // restart the countdown when the setting changes
+            autosaveSecondsRemaining = AUTOSAVE_INTERVAL_SECONDS;
+        
+            toolbar.getAutosaveCountdownLabel().setText(
+                enabled ? "Autosave in: 60 s" : "Autosave off"
+            );
+        
+            activityLogger.log(
+                "application",
+                "Autosave " + (enabled ? "enabled" : "disabled")
+            );
+        
+            if (toolbar.getNotificationsEnabledCheckBox().isSelected()) {
+                desktop.showAutosaveNotification(
+                    enabled ? "Autosave enabled." : "Autosave disabled."
+                );
+            }
+        });
+
+        // turn autosave notifications on or off
+        toolbar.getNotificationsEnabledCheckBox().setOnAction(event -> {
+            boolean enabled =
+                toolbar.getNotificationsEnabledCheckBox().isSelected();
+        
+            activityLogger.log(
+                "application",
+                "Autosave notifications " + (enabled ? "enabled" : "disabled")
+            );
+        
+            if (enabled) {
+                desktop.showAutosaveNotification("Notifications enabled.");
+            }
+        });
+
         toolbar.getLineWidthSlider().valueProperty().addListener(
             (observable, oldValue, newValue) ->
                 applyToolbarSettings(tabPane, toolbar)
@@ -80,8 +136,17 @@ public class Main extends Application {
         );
 
         toolbar.getToolSelector().valueProperty().addListener(
-            (observable, oldValue, newValue) ->
-                applyToolbarSettings(tabPane, toolbar)
+            (observable, oldValue, newValue) -> {
+                applyToolbarSettings(tabPane, toolbar);
+
+                // log current tool in current tab
+                if (tabPane.getSelectionModel().getSelectedItem() instanceof ImageTab selectedTab) {
+                    activityLogger.log(
+                        selectedTab.getText(),
+                        newValue + " tool selected"
+                    );
+                }
+            }
         );
 
         toolbar.getDashedCheckBox().selectedProperty().addListener(
@@ -411,9 +476,25 @@ public class Main extends Application {
             about.setContentText("Version 0.3.0");
             about.showAndWait();
         });
+
+        // add transform options for the canvas and selection
+        Menu transformMenu = new Menu("Transform");
+
+        transformMenu.getItems().addAll(
+            createTransformMenu("Whole canvas", false, tabPane),
+            createTransformMenu("Selection", true, tabPane)
+        );
+
+        // place transform before the help menu
+        menu.getMenuBar().getMenus().add(2, transformMenu);
+
+        // setup logging for all menus in the menu bar
+        for (Menu currentMenu : menu.getMenuBar().getMenus()) {
+            setupMenuLogging(currentMenu, tabPane);
+        }
         
         // create the scene and set it on the stage
-        Scene scene = new Scene(root, 1280, 1080); // parent to root and set dimensions to 900x600
+        Scene scene = new Scene(root, 1500, 800); // parent to root and set dimensions to 1500x800
         stage.setTitle("Nolan's Pain(t)");
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> {
@@ -424,6 +505,7 @@ public class Main extends Application {
         stage.show();
         setupAutosave(tabPane, toolbar);
         setupWebServer(tabPane);
+
     }
 
     public static void main(String[] args) {
@@ -555,6 +637,20 @@ public class Main extends Application {
                 }
             }
         );
+
+        controller.getDrawingCanvas().addEventHandler( // log each mouse release event
+            MouseEvent.MOUSE_RELEASED,
+            event -> {
+                var tool = controller.getDrawingCanvas().getCurrentTool();
+                activityLogger.log(
+                    tab.getText(),
+                    tool + " used at "
+                        + (int) event.getX() + ", "
+                        + (int) event.getY()
+                );
+            }
+        );
+
     }
 
     /**
@@ -635,6 +731,9 @@ public class Main extends Application {
     private void setupAutosave(TabPane tabPane, CustomToolBar toolbar) {
         autosaveTimer = new Timeline(
             new KeyFrame(Duration.seconds(1), event -> {
+                if (!toolbar.getAutosaveEnabledCheckBox().isSelected()) {
+                    return; // skip autosaving when disabled
+                }
                 autosaveSecondsRemaining--;
 
                 if (autosaveSecondsRemaining <= 0) {
@@ -647,11 +746,24 @@ public class Main extends Application {
                                     imageTab.getImageController()
                                         .getModifiedImage()
                                 );
+
+                                // log after the backup saves successfully
+                                activityLogger.log(
+                                    imageTab.getText(),
+                                    "Autosave backup saved"
+                                );
                             } catch (Exception e) {
                                 allSaved = false;
                                 ExceptionHandler.printFormattedException(e);
                             }
                         }
+                    }
+
+                    // notify the user if backup properly saved
+                    if (!allSaved && toolbar.getNotificationsEnabledCheckBox().isSelected()) {
+                        desktop.showAutosaveNotification(
+                            "Autosave failed. Check the application."
+                        );
                     }
 
                     autosaveSecondsRemaining = AUTOSAVE_INTERVAL_SECONDS;
@@ -692,6 +804,88 @@ public class Main extends Application {
         if (webServer != null) {
             webServer.stop();
         }
+
+        activityLogger.log("PaintApp", "App closed");
+        activityLogger.close();
+
+        desktop.close();
+    }
+
+    /**
+     * Sets up logging for all menu items within the given menu.
+     * @param menu the menu to set up logging for
+     * @param tabPane the tab pane to reference for the current tab's name
+     */
+    private void setupMenuLogging(Menu menu, TabPane tabPane) {
+        for (var item : menu.getItems()) {
+            if (item instanceof Menu submenu) {
+                setupMenuLogging(submenu, tabPane);
+            } else {
+                item.addEventHandler(ActionEvent.ACTION, event -> {
+                    String filename = "new tab";
+
+                    // get the current tab's name
+                    if (tabPane.getSelectionModel().getSelectedItem()
+                            instanceof ImageTab selectedTab) {
+                        filename = selectedTab.getText();
+                    }
+
+                    activityLogger.log(
+                        filename,
+                        menu.getText() + ": " + item.getText() + " requested"
+                    );
+                });
+            }
+        }
+    }
+
+    // create rotate and flip options for one target
+    private Menu createTransformMenu(
+            String title,
+            boolean selectionOnly,
+            TabPane tabPane
+    ) {
+        Menu menu = new Menu(title);
+
+        for (var operation : ImageTransform.Transform.values()) {
+            String label = switch (operation) {
+                case ROTATE_90 -> "Rotate 90° clockwise";
+                case ROTATE_180 -> "Rotate 180°";
+                case ROTATE_270 -> "Rotate 270° clockwise";
+                case FLIP_HORIZONTAL -> "Flip horizontally";
+                case FLIP_VERTICAL -> "Flip vertically";
+            };
+
+            MenuItem item = new MenuItem(label);
+
+            // disable the option when no tab is open
+            item.disableProperty().bind(
+                tabPane.getSelectionModel()
+                .selectedItemProperty()
+                .isNull());
+
+            item.setOnAction(event -> {
+                if (tabPane.getSelectionModel().getSelectedItem() instanceof ImageTab selectedTab) {
+                    boolean changed = selectedTab
+                    .getImageController()
+                    .transform(operation, selectionOnly);
+
+                    if (!changed) {
+                        Alert alert = new Alert(
+                            AlertType.INFORMATION,
+                            "Choose the Select tool and drag an area first."
+                        );
+
+                        alert.initOwner(tabPane.getScene().getWindow());
+                        alert.showAndWait();
+                    }
+                }
+            });
+
+            menu.getItems().add(item);
+        }
+
+        return menu;
     }
 
     /**
@@ -741,4 +935,3 @@ public class Main extends Application {
     }
     
 }
-
