@@ -1,6 +1,10 @@
 package paintapp.services;
 
-import java.awt.*;
+import java.awt.EventQueue;
+import java.awt.Graphics2D;
+import java.awt.Color;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.awt.image.BufferedImage;
 
 public final class Desktop implements AutoCloseable {
